@@ -1,5 +1,5 @@
 """
-Sends the daily Scripture & Soul devotional email.
+Sends the daily Still Waters devotional email.
 Generates a Verse of the Day + mood search link + 3 book recommendations.
 
 Usage: python tools/send_devotional.py
@@ -97,7 +97,7 @@ def build_email(d: dict) -> str:
   <div style="text-align:center;border-bottom:1px solid #2a1e0e;padding-bottom:28px;margin-bottom:36px;">
     <div style="font-size:22px;color:#8b6914;letter-spacing:6px;margin-bottom:10px;">☩ ✦ ☩</div>
     <div style="font-family:'Georgia',serif;font-size:30px;font-weight:bold;
-      color:#c9a84c;letter-spacing:4px;text-transform:uppercase;">Scripture &amp; Soul</div>
+      color:#c9a84c;letter-spacing:4px;text-transform:uppercase;">Still Waters</div>
     <div style="font-size:13px;color:#5a4530;margin-top:8px;font-style:italic;">
       Morning Devotional &nbsp;·&nbsp; {today}
     </div>
@@ -165,7 +165,7 @@ def build_email(d: dict) -> str:
   <!-- Footer -->
   <div style="text-align:center;margin-top:40px;padding-top:24px;
     border-top:1px solid #1e1508;font-size:10px;color:#2a1e0e;letter-spacing:2px;">
-    SCRIPTURE &amp; SOUL &nbsp;✦&nbsp; KJV &amp; WEB &nbsp;✦&nbsp; SEEK AND YE SHALL FIND
+    STILL WATERS &nbsp;✦&nbsp; KJV &amp; WEB &nbsp;✦&nbsp; HE LEADETH ME BESIDE THE STILL WATERS
     <div style="margin-top:12px;">
       <a href="{APP_URL}/unsubscribe?email={{EMAIL}}" style="color:#2a1e0e;font-size:9px;letter-spacing:1px;">Unsubscribe</a>
     </div>
@@ -195,7 +195,7 @@ def main():
             msg = MIMEMultipart("alternative")
             msg["From"] = GMAIL_USER
             msg["To"] = email
-            msg["Subject"] = f"Scripture & Soul — {d.get('theme', 'Daily Verse')} — {today}"
+            msg["Subject"] = f"Still Waters — {d.get('theme', 'Daily Verse')} — {today}"
             msg.attach(MIMEText(html, "html"))
             s.sendmail(GMAIL_USER, [email], msg.as_string())
             print(f"  ✓ {email}")

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: lexington-scripture-and-soul
+    name: still-waters-scripture
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
