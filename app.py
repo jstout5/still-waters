@@ -70,8 +70,8 @@ Books should be widely available, respected Christian titles (e.g. C.S. Lewis, M
 Return only the JSON, no other text."""
 
     response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=2000,
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1400,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -130,9 +130,12 @@ def search():
         return jsonify({"error": "Please describe what you are feeling."}), 400
 
     try:
-        result = get_verses(mood, version)
-        theme = result.get("verses", [{}])[0].get("reference", mood)
-        result["sermons"] = get_sermons(mood)
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=2) as ex:
+            verses_fut  = ex.submit(get_verses, mood, version)
+            sermons_fut = ex.submit(get_sermons, mood)
+        result = verses_fut.result()
+        result["sermons"] = sermons_fut.result()
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
