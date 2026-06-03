@@ -11,6 +11,8 @@ import smtplib
 from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from pathlib import Path
+from urllib.parse import quote_plus
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -21,11 +23,15 @@ client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 APP_URL = os.getenv("APP_URL", "http://localhost:5050")
+SUBSCRIBERS_FILE = Path(__file__).parent.parent / "subscribers.json"
 
-RECIPIENTS = [
-    "frostbytehero@gmail.com",
-    "criggs4568@yahoo.com",
-]
+
+def get_recipients() -> list:
+    if SUBSCRIBERS_FILE.exists():
+        subs = json.loads(SUBSCRIBERS_FILE.read_text(encoding="utf-8")).get("subscribers", [])
+        if subs:
+            return subs
+    return ["frostbytehero@gmail.com"]
 
 
 def get_devotional() -> dict:
@@ -160,6 +166,9 @@ def build_email(d: dict) -> str:
   <div style="text-align:center;margin-top:40px;padding-top:24px;
     border-top:1px solid #1e1508;font-size:10px;color:#2a1e0e;letter-spacing:2px;">
     SCRIPTURE &amp; SOUL &nbsp;✦&nbsp; KJV &amp; WEB &nbsp;✦&nbsp; SEEK AND YE SHALL FIND
+    <div style="margin-top:12px;">
+      <a href="{APP_URL}/unsubscribe?email={{EMAIL}}" style="color:#2a1e0e;font-size:9px;letter-spacing:1px;">Unsubscribe</a>
+    </div>
   </div>
 
 </div>
@@ -168,23 +177,28 @@ def build_email(d: dict) -> str:
 
 
 def main():
+    recipients = get_recipients()
+    if not recipients:
+        print("No subscribers — nothing to send.")
+        return
+
     print("Generating today's devotional...")
     d = get_devotional()
     print(f"  Verse: {d.get('verse_reference')} — Theme: {d.get('theme')}")
-
-    html = build_email(d)
     today = date.today().strftime("%B %d, %Y")
 
-    msg = MIMEMultipart("alternative")
-    msg["From"] = GMAIL_USER
-    msg["To"] = ", ".join(RECIPIENTS)
-    msg["Subject"] = f"Scripture & Soul — {d.get('theme', 'Daily Verse')} — {today}"
-    msg.attach(MIMEText(html, "html"))
-
-    print(f"Sending to {', '.join(RECIPIENTS)}...")
+    print(f"Sending to {len(recipients)} subscriber(s)...")
     with smtplib.SMTP("smtp.gmail.com", 587) as s:
         s.ehlo(); s.starttls(); s.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        s.sendmail(GMAIL_USER, RECIPIENTS, msg.as_string())
+        for email in recipients:
+            html = build_email(d).replace("{EMAIL}", quote_plus(email))
+            msg = MIMEMultipart("alternative")
+            msg["From"] = GMAIL_USER
+            msg["To"] = email
+            msg["Subject"] = f"Scripture & Soul — {d.get('theme', 'Daily Verse')} — {today}"
+            msg.attach(MIMEText(html, "html"))
+            s.sendmail(GMAIL_USER, [email], msg.as_string())
+            print(f"  ✓ {email}")
 
     print("Devotional sent.")
 

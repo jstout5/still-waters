@@ -357,6 +357,33 @@
 
 </div>
 
+<div style="max-width:780px;margin:0 auto;padding:0 24px 64px;">
+  <div style="background:linear-gradient(145deg,#1a1208,#111008);border:1px solid #3a2a14;
+    border-top:3px solid #8b6914;border-radius:4px;padding:36px 40px;text-align:center;">
+    <div style="font-size:22px;color:#8b6914;letter-spacing:6px;margin-bottom:10px;">✦</div>
+    <div style="font-family:'Cinzel',serif;font-size:16px;letter-spacing:3px;color:#c9a84c;
+      text-transform:uppercase;margin-bottom:8px;">Daily Verse by Email</div>
+    <div style="font-style:italic;color:#7a6040;font-size:15px;margin-bottom:24px;line-height:1.6;">
+      Receive a verse, reflection, and morning prayer each day at 8 a.m.
+    </div>
+    <div style="display:flex;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
+      <input id="sub-email" type="email" placeholder="your@email.com"
+        style="flex:1;background:#0f0b04;border:1px solid #3a2a14;border-radius:2px;
+        color:#d4b896;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
+        outline:none;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='#8b6914'" onblur="this.style.borderColor='#3a2a14'"
+        onkeydown="if(event.key==='Enter')subscribe()">
+      <button onclick="subscribe()"
+        style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;
+        text-transform:uppercase;color:#0f0b04;background:linear-gradient(135deg,#c9a84c,#a8862e);
+        border:none;border-radius:2px;padding:12px 22px;cursor:pointer;white-space:nowrap;">
+        Subscribe
+      </button>
+    </div>
+    <div id="sub-msg" style="margin-top:16px;font-style:italic;font-size:14px;display:none;"></div>
+  </div>
+</div>
+
 <div class="footer">
   Lexington Scripture &amp; Soul &nbsp;✦&nbsp; KJV &amp; WEB &nbsp;✦&nbsp; Seek and ye shall find
 </div>
@@ -467,6 +494,37 @@
       seekScripture();
     }
   });
+
+  async function subscribe() {
+    const email = document.getElementById('sub-email').value.trim();
+    const msg = document.getElementById('sub-msg');
+    if (!email) { document.getElementById('sub-email').focus(); return; }
+    msg.style.display = 'none';
+    try {
+      const resp = await fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await resp.json();
+      msg.style.display = 'block';
+      if (data.status === 'subscribed') {
+        msg.style.color = '#c9a84c';
+        msg.textContent = '✦ You are subscribed. Your first verse arrives tomorrow at 8 a.m.';
+        document.getElementById('sub-email').value = '';
+      } else if (data.status === 'already_subscribed') {
+        msg.style.color = '#7a6040';
+        msg.textContent = 'That email is already subscribed.';
+      } else {
+        msg.style.color = '#8b3a3a';
+        msg.textContent = data.error || 'Something went wrong. Please try again.';
+      }
+    } catch {
+      msg.style.display = 'block';
+      msg.style.color = '#8b3a3a';
+      msg.textContent = 'Could not connect. Please try again.';
+    }
+  }
 </script>
 
 </body>

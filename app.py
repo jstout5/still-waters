@@ -5,9 +5,21 @@ Returns relevant Bible passages based on the user's emotional state or life issu
 
 import os
 import json
+import re
+from pathlib import Path
 from flask import Flask, render_template, request, jsonify
 from anthropic import Anthropic
 from dotenv import load_dotenv
+
+SUBSCRIBERS_FILE = Path(__file__).parent / "subscribers.json"
+
+def load_subscribers() -> list:
+    if SUBSCRIBERS_FILE.exists():
+        return json.loads(SUBSCRIBERS_FILE.read_text(encoding="utf-8")).get("subscribers", [])
+    return []
+
+def save_subscribers(subs: list):
+    SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
 
 load_dotenv()
 
@@ -124,6 +136,30 @@ def search():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/subscribe", methods=["POST"])
+def subscribe():
+    data = request.get_json()
+    email = (data.get("email", "") or "").strip().lower()
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"error": "Please enter a valid email address."}), 400
+    subs = load_subscribers()
+    if email in subs:
+        return jsonify({"status": "already_subscribed"})
+    subs.append(email)
+    save_subscribers(subs)
+    return jsonify({"status": "subscribed"})
+
+
+@app.route("/unsubscribe", methods=["GET"])
+def unsubscribe():
+    email = (request.args.get("email", "") or "").strip().lower()
+    if email:
+        subs = load_subscribers()
+        subs = [s for s in subs if s != email]
+        save_subscribers(subs)
+    return "<html><body style='background:#1a1208;font-family:Georgia,serif;color:#c9a84c;text-align:center;padding:80px;'><h2>✦ You have been unsubscribed.</h2><p style='color:#7a6040;margin-top:16px;'>You will no longer receive daily devotionals.</p></body></html>"
 
 
 if __name__ == "__main__":
