@@ -543,9 +543,9 @@
     <div style="font-style:italic;color:#5a7a9a;font-size:15px;margin-bottom:24px;line-height:1.6;">
       Receive a verse, reflection, and morning prayer each day at 8 a.m.
     </div>
-    <div style="display:flex;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
       <input id="sub-email" type="email" placeholder="your@email.com"
-        style="flex:1;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+        style="flex:1;min-width:0;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
         color:#1a2a3a;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
         outline:none;transition:border-color 0.2s,box-shadow 0.2s;"
         onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
@@ -554,7 +554,7 @@
       <button onclick="subscribe()"
         style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;
         text-transform:uppercase;color:#ffffff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
-        border:none;border-radius:10px;padding:12px 22px;cursor:pointer;white-space:nowrap;
+        border:none;border-radius:10px;padding:12px 22px;cursor:pointer;white-space:nowrap;flex-shrink:0;
         box-shadow:0 4px 14px rgba(58,122,154,0.25);">
         Subscribe
       </button>
