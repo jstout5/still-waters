@@ -10,46 +10,48 @@
 
   body {
     min-height: 100vh;
-    background: #1a1208;
+    background: #4A5299;
     background-image:
-      radial-gradient(ellipse at 20% 20%, #2a1f0a 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 80%, #0f1a08 0%, transparent 60%);
+      radial-gradient(ellipse at 10% 10%, #7B6EB8 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 85%, #364090 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, #5560A8 0%, transparent 70%);
     font-family: 'EB Garamond', Georgia, serif;
-    color: #d4b896;
+    color: #1A1235;
   }
 
   /* ── HEADER ── */
   .header {
     text-align: center;
     padding: 52px 20px 36px;
-    border-bottom: 1px solid #3a2a14;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
     position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
   }
   .header::before, .header::after {
-    content: '✦';
+    content: '✿';
     position: absolute;
     top: 50%; transform: translateY(-50%);
-    font-size: 18px; color: #8b6914;
+    font-size: 22px; color: rgba(255,255,255,0.35);
   }
   .header::before { left: 40px; }
   .header::after  { right: 40px; }
 
-  .ornament { font-size: 28px; color: #8b6914; letter-spacing: 8px; margin-bottom: 12px; }
+  .ornament { font-size: 26px; color: rgba(255,255,255,0.6); letter-spacing: 10px; margin-bottom: 12px; }
   h1 {
     font-family: 'Cinzel', serif;
     font-size: clamp(28px, 5vw, 48px);
     font-weight: 700;
-    color: #c9a84c;
+    color: #ffffff;
     letter-spacing: 4px;
     text-transform: uppercase;
-    text-shadow: 0 2px 20px rgba(201,168,76,0.3);
+    text-shadow: 0 2px 24px rgba(180,160,240,0.5);
   }
   .tagline {
     font-style: italic;
     font-size: 16px;
-    color: #8a7055;
+    color: rgba(255,255,255,0.6);
     margin-top: 10px;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
   }
 
   /* ── MAIN ── */
@@ -61,13 +63,13 @@
 
   /* ── SEARCH CARD ── */
   .search-card {
-    background: linear-gradient(145deg, #1f1508, #171005);
-    border: 1px solid #3a2a14;
-    border-top: 3px solid #8b6914;
-    border-radius: 4px;
+    background: linear-gradient(145deg, #FDFCFF, #F2EEFF);
+    border: 1px solid #C8BEE8;
+    border-top: 3px solid #8B7EC4;
+    border-radius: 12px;
     padding: 36px 40px;
     margin-bottom: 48px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(201,168,76,0.1);
+    box-shadow: 0 12px 48px rgba(40,30,100,0.22), inset 0 1px 0 rgba(255,255,255,0.8);
   }
 
   .search-label {
@@ -75,17 +77,17 @@
     font-size: 11px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: #8b6914;
+    color: #7060A8;
     margin-bottom: 14px;
     display: block;
   }
 
   textarea {
     width: 100%;
-    background: #0f0b04;
-    border: 1px solid #3a2a14;
-    border-radius: 2px;
-    color: #d4b896;
+    background: #FAF8FF;
+    border: 1px solid #C8BEE8;
+    border-radius: 8px;
+    color: #1A1235;
     font-family: 'EB Garamond', serif;
     font-size: 18px;
     line-height: 1.6;
@@ -93,10 +95,10 @@
     resize: vertical;
     min-height: 90px;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  textarea::placeholder { color: #4a3820; font-style: italic; }
-  textarea:focus { border-color: #8b6914; }
+  textarea::placeholder { color: #B0A8D0; font-style: italic; }
+  textarea:focus { border-color: #8B7EC4; box-shadow: 0 0 0 3px rgba(139,126,196,0.12); }
 
   /* Version toggle */
   .version-row {
@@ -111,24 +113,24 @@
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #5a4530;
+    color: #9A90C0;
   }
   .version-btn {
     font-family: 'Cinzel', serif;
     font-size: 11px;
     letter-spacing: 2px;
     padding: 6px 16px;
-    border: 1px solid #3a2a14;
-    border-radius: 2px;
+    border: 1px solid #C8BEE8;
+    border-radius: 20px;
     background: transparent;
-    color: #5a4530;
+    color: #9A90C0;
     cursor: pointer;
     transition: all 0.2s;
   }
   .version-btn.active {
-    background: #1f1508;
-    border-color: #8b6914;
-    color: #c9a84c;
+    background: #8B7EC4;
+    border-color: #8B7EC4;
+    color: #ffffff;
   }
 
   /* Submit */
@@ -139,22 +141,23 @@
     font-weight: 600;
     letter-spacing: 4px;
     text-transform: uppercase;
-    color: #0f0b04;
-    background: linear-gradient(135deg, #c9a84c, #a8862e);
+    color: #ffffff;
+    background: linear-gradient(135deg, #8B7EC4, #6B5EA0);
     border: none;
-    border-radius: 2px;
+    border-radius: 8px;
     padding: 16px;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 16px rgba(107,94,160,0.35);
   }
-  .seek-btn:hover { opacity: 0.9; }
+  .seek-btn:hover { opacity: 0.92; transform: translateY(-1px); }
   .seek-btn:active { transform: scale(0.99); }
-  .seek-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .seek-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
   /* Divider */
   .divider {
     text-align: center;
-    color: #3a2a14;
+    color: rgba(255,255,255,0.3);
     font-size: 18px;
     letter-spacing: 12px;
     margin: 0 0 36px;
@@ -167,27 +170,28 @@
     text-align: center;
     font-style: italic;
     font-size: 19px;
-    color: #a08060;
+    color: rgba(255,255,255,0.75);
     line-height: 1.7;
     margin-bottom: 36px;
     padding: 0 20px;
   }
 
   .verse-card {
-    background: linear-gradient(145deg, #1a1208, #141008);
-    border: 1px solid #2a1e0e;
-    border-left: 3px solid #8b6914;
-    border-radius: 2px;
+    background: linear-gradient(145deg, #FDFCFF, #F5F0FF);
+    border: 1px solid #C8BEE8;
+    border-left: 4px solid #9B8EC4;
+    border-radius: 10px;
     padding: 28px 32px;
     margin-bottom: 20px;
     position: relative;
+    box-shadow: 0 4px 20px rgba(40,30,100,0.12);
   }
   .verse-card::before {
     content: '\201C';
     position: absolute;
-    top: 12px; left: 16px;
-    font-size: 48px;
-    color: #2a1e0e;
+    top: 10px; left: 18px;
+    font-size: 52px;
+    color: #E0D8F8;
     font-family: Georgia, serif;
     line-height: 1;
   }
@@ -197,14 +201,14 @@
     font-size: 11px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: #8b6914;
+    color: #7060A8;
     margin-bottom: 14px;
   }
 
   .verse-text {
     font-size: 20px;
     line-height: 1.8;
-    color: #e8d5b8;
+    color: #1A1235;
     font-style: italic;
     margin-bottom: 16px;
     padding-left: 8px;
@@ -212,9 +216,9 @@
 
   .verse-reflection {
     font-size: 14px;
-    color: #7a6040;
+    color: #6A60A0;
     line-height: 1.7;
-    border-top: 1px solid #2a1e0e;
+    border-top: 1px solid #E0D8F8;
     padding-top: 14px;
     margin-top: 4px;
   }
@@ -224,7 +228,7 @@
     text-align: center;
     padding: 48px 0;
     font-style: italic;
-    color: #5a4530;
+    color: rgba(255,255,255,0.55);
     font-size: 17px;
     display: none;
   }
@@ -241,27 +245,28 @@
 
   .error-msg {
     text-align: center;
-    color: #8b3a3a;
+    color: #B05070;
     font-style: italic;
     padding: 24px;
-    border: 1px solid #3a1414;
-    border-radius: 2px;
-    background: #110808;
+    border: 1px solid #E8C0D0;
+    border-radius: 8px;
+    background: #FFF5F8;
   }
 
   /* ── SERMONS ── */
   .sermon-card {
     display:flex; align-items:flex-start; gap:16px;
-    background:#111008; border:1px solid #2a1e0e;
-    border-left:3px solid #3a2a14; border-radius:2px;
+    background:#F5F0FF; border:1px solid #C8BEE8;
+    border-left:4px solid #C8BEE8; border-radius:8px;
     padding:18px 22px; margin-bottom:10px;
-    text-decoration:none; transition:border-color 0.2s;
+    text-decoration:none; transition:border-left-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(40,30,100,0.08);
   }
-  .sermon-card:hover { border-left-color:#8b6914; }
+  .sermon-card:hover { border-left-color:#9B8EC4; box-shadow: 0 4px 16px rgba(40,30,100,0.14); }
   .sermon-icon { font-size:22px; flex-shrink:0; margin-top:2px; }
-  .sermon-title { font-size:15px; color:#d4b896; margin-bottom:4px; line-height:1.4; }
-  .sermon-meta { font-size:11px; color:#5a4530; letter-spacing:1px; margin-bottom:4px; }
-  .sermon-link-label { font-size:9px; color:#3a2a14; letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
+  .sermon-title { font-size:15px; color:#1A1235; margin-bottom:4px; line-height:1.4; }
+  .sermon-meta { font-size:11px; color:#9A90C0; letter-spacing:1px; margin-bottom:4px; }
+  .sermon-link-label { font-size:9px; color:#B0A8D0; letter-spacing:2px; text-transform:uppercase; margin-top:6px; }
 
   /* ── BOOKS ── */
   .books-section { margin-top: 48px; }
@@ -270,7 +275,7 @@
     font-size: 11px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: #5a4530;
+    color: rgba(255,255,255,0.55);
     margin-bottom: 20px;
     text-align: center;
   }
@@ -278,30 +283,31 @@
     display: flex;
     align-items: flex-start;
     gap: 18px;
-    background: #111008;
-    border: 1px solid #2a1e0e;
-    border-radius: 2px;
+    background: #F5F0FF;
+    border: 1px solid #C8BEE8;
+    border-radius: 10px;
     padding: 20px 24px;
     margin-bottom: 12px;
     text-decoration: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(40,30,100,0.08);
   }
-  .book-card:hover { border-color: #8b6914; }
+  .book-card:hover { border-color: #9B8EC4; box-shadow: 0 4px 20px rgba(40,30,100,0.15); }
   .book-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
   .book-title {
     font-family: 'Cinzel', serif;
     font-size: 14px;
-    color: #c9a84c;
+    color: #6B5EA0;
     margin-bottom: 3px;
   }
-  .book-author { font-size: 12px; color: #5a4530; margin-bottom: 6px; letter-spacing: 1px; }
-  .book-desc { font-size: 14px; color: #7a6040; line-height: 1.6; }
+  .book-author { font-size: 12px; color: #9A90C0; margin-bottom: 6px; letter-spacing: 1px; }
+  .book-desc { font-size: 14px; color: #4A3870; line-height: 1.6; }
   .book-link-label {
     font-family: 'Cinzel', serif;
     font-size: 9px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #4a3820;
+    color: #B0A8D0;
     margin-top: 8px;
   }
 
@@ -309,9 +315,9 @@
   .footer {
     text-align: center;
     padding: 32px 20px;
-    border-top: 1px solid #1e1508;
+    border-top: 1px solid rgba(255,255,255,0.12);
     font-size: 11px;
-    color: #3a2a14;
+    color: rgba(255,255,255,0.3);
     letter-spacing: 2px;
     text-transform: uppercase;
   }
@@ -320,8 +326,8 @@
 <body>
 
 <div class="header">
-  <div class="ornament">☩ ✦ ☩</div>
-  <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:#5a4530;text-transform:uppercase;margin-bottom:6px;">Lexington</div>
+  <div class="ornament">✾ ❀ ✾</div>
+  <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:6px;">Lexington</div>
   <h1>Scripture &amp; Soul</h1>
   <div class="tagline">Thy word is a lamp unto my feet, and a light unto my path — Psalm 119:105</div>
 </div>
@@ -347,7 +353,7 @@
     </button>
   </div>
 
-  <div class="divider">✦ ✦ ✦</div>
+  <div class="divider">✿ ✿ ✿</div>
 
   <div class="loading" id="loading">
     <span class="loading-dots">Searching the Scriptures</span>
@@ -358,25 +364,28 @@
 </div>
 
 <div style="max-width:780px;margin:0 auto;padding:0 24px 64px;">
-  <div style="background:linear-gradient(145deg,#1a1208,#111008);border:1px solid #3a2a14;
-    border-top:3px solid #8b6914;border-radius:4px;padding:36px 40px;text-align:center;">
-    <div style="font-size:22px;color:#8b6914;letter-spacing:6px;margin-bottom:10px;">✦</div>
-    <div style="font-family:'Cinzel',serif;font-size:16px;letter-spacing:3px;color:#c9a84c;
+  <div style="background:linear-gradient(145deg,#FDFCFF,#F2EEFF);border:1px solid #C8BEE8;
+    border-top:3px solid #9B8EC4;border-radius:12px;padding:36px 40px;text-align:center;
+    box-shadow:0 8px 32px rgba(40,30,100,0.15);">
+    <div style="font-size:24px;color:#9B8EC4;letter-spacing:8px;margin-bottom:10px;">✾ ❀ ✾</div>
+    <div style="font-family:'Cinzel',serif;font-size:16px;letter-spacing:3px;color:#6B5EA0;
       text-transform:uppercase;margin-bottom:8px;">Daily Verse by Email</div>
-    <div style="font-style:italic;color:#7a6040;font-size:15px;margin-bottom:24px;line-height:1.6;">
+    <div style="font-style:italic;color:#7A70A0;font-size:15px;margin-bottom:24px;line-height:1.6;">
       Receive a verse, reflection, and morning prayer each day at 8 a.m.
     </div>
     <div style="display:flex;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
       <input id="sub-email" type="email" placeholder="your@email.com"
-        style="flex:1;background:#0f0b04;border:1px solid #3a2a14;border-radius:2px;
-        color:#d4b896;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
-        outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='#8b6914'" onblur="this.style.borderColor='#3a2a14'"
+        style="flex:1;background:#FAF8FF;border:1px solid #C8BEE8;border-radius:8px;
+        color:#1A1235;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
+        outline:none;transition:border-color 0.2s,box-shadow 0.2s;"
+        onfocus="this.style.borderColor='#8B7EC4';this.style.boxShadow='0 0 0 3px rgba(139,126,196,0.12)'"
+        onblur="this.style.borderColor='#C8BEE8';this.style.boxShadow='none'"
         onkeydown="if(event.key==='Enter')subscribe()">
       <button onclick="subscribe()"
         style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;
-        text-transform:uppercase;color:#0f0b04;background:linear-gradient(135deg,#c9a84c,#a8862e);
-        border:none;border-radius:2px;padding:12px 22px;cursor:pointer;white-space:nowrap;">
+        text-transform:uppercase;color:#ffffff;background:linear-gradient(135deg,#9B8EC4,#6B5EA0);
+        border:none;border-radius:8px;padding:12px 22px;cursor:pointer;white-space:nowrap;
+        box-shadow:0 4px 14px rgba(107,94,160,0.3);">
         Subscribe
       </button>
     </div>
@@ -385,7 +394,7 @@
 </div>
 
 <div class="footer">
-  Lexington Scripture &amp; Soul &nbsp;✦&nbsp; KJV &amp; WEB &nbsp;✦&nbsp; Seek and ye shall find
+  Lexington Scripture &amp; Soul &nbsp;✿&nbsp; KJV &amp; WEB &nbsp;✿&nbsp; Seek and ye shall find
 </div>
 
 <script>
@@ -440,7 +449,7 @@
 
         if (data.sermons && data.sermons.length) {
           html += `<div class="books-section">
-            <div class="books-label">&#9654; &nbsp; Related Sermons &nbsp;&mdash;&nbsp; <span style="font-size:9px;color:#3a2a14;">SermonAudio &middot; Free &middot; Conservative</span></div>`;
+            <div class="books-label">&#9654; &nbsp; Related Sermons &nbsp;&mdash;&nbsp; <span style="font-size:9px;color:rgba(255,255,255,0.25);">SermonAudio &middot; Free &middot; Conservative</span></div>`;
           data.sermons.forEach(s => {
             html += `
               <a class="sermon-card" href="${s.url}" target="_blank" rel="noopener">
@@ -509,19 +518,19 @@
       const data = await resp.json();
       msg.style.display = 'block';
       if (data.status === 'subscribed') {
-        msg.style.color = '#c9a84c';
-        msg.textContent = '✦ You are subscribed. Your first verse arrives tomorrow at 8 a.m.';
+        msg.style.color = '#6B5EA0';
+        msg.textContent = '✿ You are subscribed. Your first verse arrives tomorrow at 8 a.m.';
         document.getElementById('sub-email').value = '';
       } else if (data.status === 'already_subscribed') {
-        msg.style.color = '#7a6040';
+        msg.style.color = '#9A90C0';
         msg.textContent = 'That email is already subscribed.';
       } else {
-        msg.style.color = '#8b3a3a';
+        msg.style.color = '#B05070';
         msg.textContent = data.error || 'Something went wrong. Please try again.';
       }
     } catch {
       msg.style.display = 'block';
-      msg.style.color = '#8b3a3a';
+      msg.style.color = '#B05070';
       msg.textContent = 'Could not connect. Please try again.';
     }
   }
