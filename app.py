@@ -74,6 +74,40 @@ def sb_remove_subscriber(email: str):
 def save_subscribers(subs: list):
     SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
 
+
+READING_PLANS_FILE = Path(__file__).parent / "reading_plans.json"
+
+BIBLE_BOOKS = [
+    ("Genesis", 50), ("Exodus", 40), ("Leviticus", 27), ("Numbers", 36),
+    ("Deuteronomy", 34), ("Joshua", 24), ("Judges", 21), ("Ruth", 4),
+    ("1 Samuel", 31), ("2 Samuel", 24), ("1 Kings", 22), ("2 Kings", 25),
+    ("1 Chronicles", 29), ("2 Chronicles", 36), ("Ezra", 10), ("Nehemiah", 13),
+    ("Esther", 10), ("Job", 42), ("Psalms", 150), ("Proverbs", 31),
+    ("Ecclesiastes", 12), ("Song of Solomon", 8), ("Isaiah", 66), ("Jeremiah", 52),
+    ("Lamentations", 5), ("Ezekiel", 48), ("Daniel", 12), ("Hosea", 14),
+    ("Joel", 3), ("Amos", 9), ("Obadiah", 1), ("Jonah", 4), ("Micah", 7),
+    ("Nahum", 3), ("Habakkuk", 3), ("Zephaniah", 3), ("Haggai", 2),
+    ("Zechariah", 14), ("Malachi", 4),
+    ("Matthew", 28), ("Mark", 16), ("Luke", 24), ("John", 21), ("Acts", 28),
+    ("Romans", 16), ("1 Corinthians", 16), ("2 Corinthians", 13), ("Galatians", 6),
+    ("Ephesians", 6), ("Philippians", 4), ("Colossians", 4), ("1 Thessalonians", 5),
+    ("2 Thessalonians", 3), ("1 Timothy", 6), ("2 Timothy", 4), ("Titus", 3),
+    ("Philemon", 1), ("Hebrews", 13), ("James", 5), ("1 Peter", 5), ("2 Peter", 3),
+    ("1 John", 5), ("2 John", 1), ("3 John", 1), ("Jude", 1), ("Revelation", 22),
+]
+CHAPTERS_PER_DAY_MAP = {5: 1, 10: 2, 15: 3, 30: 5}
+
+
+def load_reading_plans() -> list:
+    if READING_PLANS_FILE.exists():
+        return json.loads(READING_PLANS_FILE.read_text(encoding="utf-8")).get("plans", [])
+    return []
+
+
+def save_reading_plans(plans: list):
+    READING_PLANS_FILE.write_text(json.dumps({"plans": plans}, indent=2), encoding="utf-8")
+
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -256,6 +290,55 @@ def unsubscribe():
     if email:
         sb_remove_subscriber(email)
     return "<html><body style='background:#ddeef8;font-family:Georgia,serif;color:#2a4a6a;text-align:center;padding:80px;'><h2>You have been unsubscribed.</h2><p style='color:#5a7a9a;margin-top:16px;'>You will no longer receive daily verses.</p></body></html>"
+
+
+@app.route("/reading-plan", methods=["POST"])
+def create_reading_plan():
+    from datetime import date as dt
+    data = request.get_json()
+    email = (data.get("email", "") or "").strip().lower()
+    minutes = int(data.get("minutes_per_day", 15))
+    version = data.get("version", "KJV")
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return jsonify({"error": "Please enter a valid email address."}), 400
+    if minutes not in CHAPTERS_PER_DAY_MAP:
+        return jsonify({"error": "Invalid reading plan selected."}), 400
+    plans = load_reading_plans()
+    existing = next((p for p in plans if p["email"] == email), None)
+    plan_data = {
+        "email": email,
+        "minutes_per_day": minutes,
+        "chapters_per_day": CHAPTERS_PER_DAY_MAP[minutes],
+        "version": version,
+        "current_day": 1,
+        "start_date": dt.today().isoformat(),
+        "active": True,
+    }
+    if existing:
+        existing.update(plan_data)
+        save_reading_plans(plans)
+        return jsonify({"status": "updated"})
+    plans.append(plan_data)
+    save_reading_plans(plans)
+    return jsonify({"status": "created"})
+
+
+@app.route("/reading-plan/unsubscribe", methods=["GET"])
+def cancel_reading_plan():
+    email = (request.args.get("email", "") or "").strip().lower()
+    if email:
+        plans = load_reading_plans()
+        for p in plans:
+            if p["email"] == email:
+                p["active"] = False
+        save_reading_plans(plans)
+    return (
+        "<html><body style='background:#ddeef8;font-family:Georgia,serif;"
+        "color:#2a4a6a;text-align:center;padding:80px;'>"
+        "<h2>Your Daily Scroll has been paused.</h2>"
+        "<p style='color:#5a7a9a;margin-top:16px;'>Your place is saved. "
+        "You may return and begin again at any time.</p></body></html>"
+    )
 
 
 if __name__ == "__main__":

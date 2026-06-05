@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Still Waters</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -413,6 +414,69 @@
     margin-top: 8px;
   }
 
+  /* ── FEATURES GRID ── */
+  .features-section { max-width: 1150px; margin: 0 auto; padding: 0 24px 64px; }
+  .features-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; align-items: start; }
+  @media (max-width: 800px) { .features-grid { grid-template-columns: 1fr; } }
+
+  .feature-panel {
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(100,160,220,0.25);
+    border-top: 3px solid #7AABCC;
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 8px 40px rgba(60,100,160,0.12);
+    backdrop-filter: blur(8px);
+  }
+  .feature-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px; letter-spacing: 3px; color: #3a6a8a;
+    text-transform: uppercase; text-align: center; margin-bottom: 6px;
+  }
+  .feature-sub {
+    font-style: italic; color: #5a7a9a; font-size: 14px;
+    text-align: center; margin-bottom: 20px; line-height: 1.6;
+  }
+
+  /* Church finder */
+  #church-map { height: 320px; border-radius: 12px; border: 1px solid rgba(100,160,220,0.2); overflow: hidden; margin-bottom: 12px; }
+  .church-list-wrap { max-height: 260px; overflow-y: auto; padding-right: 2px; }
+  .church-item {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid rgba(100,160,220,0.2);
+    border-left: 4px solid rgba(122,171,204,0.4);
+    border-radius: 10px; padding: 11px 14px; margin-bottom: 8px;
+    cursor: pointer; transition: border-left-color 0.2s, box-shadow 0.2s;
+  }
+  .church-item:hover, .church-item.active {
+    border-left-color: #7AABCC; box-shadow: 0 3px 14px rgba(60,100,160,0.12);
+  }
+  .church-name { font-family: 'Cinzel', serif; font-size: 12px; color: #2a4a6a; margin-bottom: 2px; }
+  .church-denom { font-size: 10px; color: #7a9ab0; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .church-addr { font-size: 12px; color: #4a6a8a; margin-bottom: 5px; }
+  .church-distance { font-size: 10px; color: #5A9CBB; letter-spacing: 1px; }
+  .church-dir-link { font-size: 10px; color: #aac0d0; letter-spacing: 1px; text-decoration: none; margin-left: 8px; transition: color 0.15s; }
+  .church-dir-link:hover { color: #5A9CBB; }
+  .church-empty { text-align: center; font-style: italic; color: #aac0d0; font-size: 14px; padding: 28px 10px; }
+
+  /* The Daily Scroll plan cards */
+  .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .plan-card {
+    background: rgba(255,255,255,0.88); border: 2px solid rgba(100,160,220,0.2);
+    border-radius: 14px; padding: 16px 10px; cursor: pointer; transition: all 0.2s;
+    text-align: center; position: relative;
+  }
+  .plan-card:hover { border-color: #7AABCC; box-shadow: 0 4px 18px rgba(60,100,160,0.12); }
+  .plan-card.selected {
+    border-color: #5A9CBB; background: rgba(90,156,187,0.09);
+    box-shadow: 0 4px 24px rgba(58,122,154,0.18);
+  }
+  .plan-check { position: absolute; top: 8px; right: 10px; font-size: 13px; color: #5A9CBB; display: none; }
+  .plan-card.selected .plan-check { display: block; }
+  .plan-duration { font-family: 'Cinzel', serif; font-size: 19px; color: #2a4a6a; margin-bottom: 4px; }
+  .plan-chapters { font-size: 10px; color: #7a9ab0; letter-spacing: 1px; margin-bottom: 4px; }
+  .plan-timeline { font-style: italic; font-size: 12px; color: #8aaabb; }
+
   /* ── FOOTER ── */
   .footer {
     text-align: center;
@@ -533,6 +597,113 @@
 
 </div>
 
+<!-- ── CHURCH FINDER + THE DAILY SCROLL ── -->
+<div class="features-section">
+  <div class="divider" style="margin-bottom:48px;">✿ ✿ ✿</div>
+  <div class="features-grid">
+
+    <!-- LEFT: Find a Church Near You -->
+    <div class="feature-panel">
+      <div class="ornament" style="font-size:18px;letter-spacing:8px;margin-bottom:10px;">⛪ ✾ ⛪</div>
+      <div class="feature-title">Find a Church Near You</div>
+      <div class="feature-sub">Seek a congregation where you can worship, grow, and be known</div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center;">
+        <button id="church-find-btn" onclick="findChurches()"
+          style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:2px;
+          text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
+          border:none;border-radius:10px;padding:10px 16px;cursor:pointer;flex:1;min-width:120px;
+          box-shadow:0 4px 14px rgba(58,122,154,0.25);transition:opacity 0.2s;">
+          Use My Location
+        </button>
+        <select id="church-radius" onchange="churches.length && queryOverpass(userLat, userLon)"
+          style="font-family:'EB Garamond',serif;font-size:15px;background:rgba(255,255,255,0.9);
+          border:1px solid rgba(100,160,220,0.3);border-radius:10px;color:#1a2a3a;padding:9px 12px;outline:none;">
+          <option value="5">5 miles</option>
+          <option value="10" selected>10 miles</option>
+          <option value="25">25 miles</option>
+        </select>
+      </div>
+
+      <input id="church-filter" type="text" placeholder="Filter by name or denomination…"
+        oninput="renderChurchList()"
+        style="width:100%;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);
+        border-radius:10px;color:#1a2a3a;font-family:'EB Garamond',serif;font-size:15px;
+        padding:9px 14px;outline:none;margin-bottom:12px;box-sizing:border-box;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='#7AABCC'" onblur="this.style.borderColor='rgba(100,160,220,0.3)'">
+
+      <div id="church-map"></div>
+
+      <div id="church-list" class="church-list-wrap">
+        <div class="church-empty">Click "Use My Location" to find churches near you</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: The Daily Scroll -->
+    <div class="feature-panel">
+      <div class="ornament" style="font-size:18px;letter-spacing:8px;margin-bottom:10px;">✦ ✾ ✦</div>
+      <div class="feature-title">The Daily Scroll</div>
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:#8aaabb;
+        text-transform:uppercase;text-align:center;margin-bottom:8px;">Read the Bible at Your Pace</div>
+      <div class="feature-sub">Choose your daily reading time. Each evening's portion arrives straight to your inbox — the full text, ready before you rest.</div>
+
+      <div class="plan-grid">
+        <div class="plan-card" data-minutes="5" onclick="selectScrollPlan(5)">
+          <div class="plan-check">✓</div>
+          <div class="plan-duration">5 min</div>
+          <div class="plan-chapters">1 chapter · day</div>
+          <div class="plan-timeline">~3 years</div>
+        </div>
+        <div class="plan-card" data-minutes="10" onclick="selectScrollPlan(10)">
+          <div class="plan-check">✓</div>
+          <div class="plan-duration">10 min</div>
+          <div class="plan-chapters">2 chapters · day</div>
+          <div class="plan-timeline">~20 months</div>
+        </div>
+        <div class="plan-card" data-minutes="15" onclick="selectScrollPlan(15)">
+          <div class="plan-check">✓</div>
+          <div class="plan-duration">15 min</div>
+          <div class="plan-chapters">3 chapters · day</div>
+          <div class="plan-timeline">~13 months</div>
+        </div>
+        <div class="plan-card" data-minutes="30" onclick="selectScrollPlan(30)">
+          <div class="plan-check">✓</div>
+          <div class="plan-duration">30 min</div>
+          <div class="plan-chapters">5 chapters · day</div>
+          <div class="plan-timeline">~8 months</div>
+        </div>
+      </div>
+
+      <div class="version-row" style="justify-content:center;margin-bottom:18px;">
+        <span class="version-label">Version</span>
+        <button class="version-btn active" data-sv="KJV" onclick="setScrollVersion('KJV')">KJV</button>
+        <button class="version-btn" data-sv="WEB" onclick="setScrollVersion('WEB')">WEB</button>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <input id="scroll-email" type="email" placeholder="your@email.com"
+          style="flex:1;min-width:0;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);
+          border-radius:10px;color:#1a2a3a;font-family:'EB Garamond',serif;font-size:15px;padding:11px 14px;
+          outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='#7AABCC'" onblur="this.style.borderColor='rgba(100,160,220,0.3)'"
+          onkeydown="if(event.key==='Enter')subscribeScroll()">
+        <button onclick="subscribeScroll()"
+          style="font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:2px;
+          text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
+          border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap;
+          box-shadow:0 4px 14px rgba(58,122,154,0.25);">
+          Begin My Journey
+        </button>
+      </div>
+      <div id="scroll-msg" style="margin-top:14px;font-style:italic;font-size:13px;display:none;text-align:center;"></div>
+      <div style="font-size:11px;color:#aac0d0;text-align:center;margin-top:14px;font-style:italic;line-height:1.6;">
+        The Word will find you each evening — Genesis to Revelation, at your own pace.
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div style="max-width:780px;margin:0 auto;padding:0 24px 64px;">
   <div style="background:rgba(255,255,255,0.82);border:1px solid rgba(100,160,220,0.25);
     border-top:3px solid #7AABCC;border-radius:16px;padding:36px 40px;text-align:center;
@@ -569,6 +740,7 @@
 
 </div><!-- .page-wrap -->
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   let currentVersion = 'KJV';
 
@@ -678,6 +850,211 @@
       loading.style.display = 'none';
     }
   }
+
+  // ══════════════════════════════════════
+  //  CHURCH FINDER
+  // ══════════════════════════════════════
+
+  let churchMap = null, userMarker = null, churchMarkers = [], churches = [];
+  let userLat = null, userLon = null;
+
+  function initChurchMap() {
+    if (churchMap) return;
+    churchMap = L.map('church-map', { zoomControl: true }).setView([39.83, -98.58], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(churchMap);
+  }
+
+  function findChurches() {
+    initChurchMap();
+    if (!navigator.geolocation) {
+      document.getElementById('church-list').innerHTML = '<div class="church-empty" style="color:#aa4060;">Geolocation is not supported by your browser.</div>';
+      return;
+    }
+    const btn = document.getElementById('church-find-btn');
+    btn.disabled = true; btn.textContent = 'Locating…';
+    document.getElementById('church-list').innerHTML = '<div class="church-empty">Finding churches near you…</div>';
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userLat = pos.coords.latitude; userLon = pos.coords.longitude;
+        churchMap.setView([userLat, userLon], 13);
+        if (userMarker) userMarker.remove();
+        userMarker = L.circleMarker([userLat, userLon], {
+          radius: 9, fillColor: '#5A9CBB', color: '#fff', weight: 3, fillOpacity: 1
+        }).addTo(churchMap).bindPopup('<strong>You are here</strong>');
+        queryOverpass(userLat, userLon);
+      },
+      () => {
+        btn.disabled = false; btn.textContent = 'Use My Location';
+        document.getElementById('church-list').innerHTML = '<div class="church-empty" style="color:#aa4060;">Could not get your location. Please allow location access and try again.</div>';
+      },
+      { timeout: 12000 }
+    );
+  }
+
+  function queryOverpass(lat, lon) {
+    const miles = parseInt(document.getElementById('church-radius').value) || 10;
+    const meters = miles * 1609.34;
+    const q = `[out:json][timeout:30];(node["amenity"="place_of_worship"]["religion"="christian"](around:${meters},${lat},${lon});way["amenity"="place_of_worship"]["religion"="christian"](around:${meters},${lat},${lon}););out center;`;
+    const btn = document.getElementById('church-find-btn');
+
+    fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: 'data=' + encodeURIComponent(q)
+    })
+    .then(r => r.json())
+    .then(data => {
+      clearChurchMarkers();
+      churches = (data.elements || [])
+        .map(e => {
+          const t = e.tags || {};
+          const clat = e.lat ?? e.center?.lat;
+          const clon = e.lon ?? e.center?.lon;
+          if (!clat || !clon) return null;
+          return {
+            name: t.name || 'Unnamed Church',
+            denomination: t.denomination || t['religion:denomination'] || '',
+            addr: [t['addr:housenumber'], t['addr:street'], t['addr:city'], t['addr:state']].filter(Boolean).join(', '),
+            website: t.website || '',
+            lat: clat, lon: clon,
+            dist: haversine(lat, lon, clat, clon)
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.dist - b.dist);
+
+      addChurchMarkers();
+      renderChurchList();
+      btn.disabled = false; btn.textContent = 'Use My Location';
+    })
+    .catch(() => {
+      btn.disabled = false; btn.textContent = 'Use My Location';
+      document.getElementById('church-list').innerHTML = '<div class="church-empty" style="color:#aa4060;">Could not load church data. Please try again.</div>';
+    });
+  }
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 3958.8, r = Math.PI / 180;
+    const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r) * Math.cos(lat2*r) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  function clearChurchMarkers() {
+    churchMarkers.forEach(m => m.remove()); churchMarkers = [];
+  }
+
+  function addChurchMarkers() {
+    const icon = L.divIcon({
+      html: '<div style="width:10px;height:10px;background:#5A9CBB;border:2px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.25)"></div>',
+      iconSize: [10,10], iconAnchor: [5,5], className: ''
+    });
+    churches.slice(0, 80).forEach((c, i) => {
+      const m = L.marker([c.lat, c.lon], { icon }).addTo(churchMap)
+        .bindPopup(`<strong>${c.name}</strong>${c.denomination ? '<br><em>'+c.denomination+'</em>' : ''}<br><small>${c.dist.toFixed(1)} mi</small>`);
+      m.on('click', () => highlightChurchItem(i));
+      churchMarkers.push(m);
+    });
+  }
+
+  function renderChurchList() {
+    const filter = (document.getElementById('church-filter').value || '').toLowerCase();
+    const shown = filter
+      ? churches.filter(c => c.name.toLowerCase().includes(filter) || c.denomination.toLowerCase().includes(filter))
+      : churches;
+    const list = document.getElementById('church-list');
+    if (!shown.length) {
+      list.innerHTML = '<div class="church-empty">No churches found. Try a larger radius.</div>';
+      return;
+    }
+    list.innerHTML = shown.slice(0, 40).map(c => {
+      const idx = churches.indexOf(c);
+      return `<div class="church-item" onclick="focusChurch(${idx})" data-idx="${idx}">
+        <div class="church-name">${c.name}</div>
+        ${c.denomination ? `<div class="church-denom">${c.denomination}</div>` : ''}
+        ${c.addr ? `<div class="church-addr">${c.addr}</div>` : ''}
+        <div>
+          <span class="church-distance">${c.dist.toFixed(1)} mi away</span>
+          <a class="church-dir-link" href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lon}" target="_blank" rel="noopener">Directions ↗</a>
+          ${c.website ? `<a class="church-dir-link" href="${c.website}" target="_blank" rel="noopener">Website ↗</a>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function focusChurch(idx) {
+    const c = churches[idx]; if (!c) return;
+    churchMap.setView([c.lat, c.lon], 16);
+    churchMarkers[idx]?.openPopup();
+    highlightChurchItem(idx);
+  }
+
+  function highlightChurchItem(idx) {
+    document.querySelectorAll('.church-item').forEach(el => el.classList.remove('active'));
+    const el = document.querySelector(`.church-item[data-idx="${idx}"]`);
+    if (el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }
+
+  // ══════════════════════════════════════
+  //  THE DAILY SCROLL
+  // ══════════════════════════════════════
+
+  let scrollPlan = null, scrollVer = 'KJV';
+
+  function selectScrollPlan(minutes) {
+    scrollPlan = minutes;
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector(`.plan-card[data-minutes="${minutes}"]`)?.classList.add('selected');
+  }
+
+  function setScrollVersion(v) {
+    scrollVer = v;
+    document.querySelectorAll('[data-sv]').forEach(b => b.classList.toggle('active', b.dataset.sv === v));
+  }
+
+  async function subscribeScroll() {
+    const email = document.getElementById('scroll-email').value.trim();
+    const msg = document.getElementById('scroll-msg');
+    if (!scrollPlan) {
+      msg.style.display = 'block'; msg.style.color = '#aa4060';
+      msg.textContent = 'Please choose a reading plan above.'; return;
+    }
+    if (!email) { document.getElementById('scroll-email').focus(); return; }
+    msg.style.display = 'none';
+    try {
+      const resp = await fetch('/reading-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, minutes_per_day: scrollPlan, version: scrollVer }),
+      });
+      const data = await resp.json();
+      msg.style.display = 'block';
+      if (data.status === 'created') {
+        msg.style.color = '#3a7a9a';
+        msg.textContent = '✦ Your Daily Scroll has begun. The Word will find you each evening.';
+        document.getElementById('scroll-email').value = '';
+      } else if (data.status === 'updated') {
+        msg.style.color = '#3a7a9a';
+        msg.textContent = '✦ Your reading plan has been updated. A fresh journey begins tonight.';
+        document.getElementById('scroll-email').value = '';
+      } else {
+        msg.style.color = '#aa4060';
+        msg.textContent = data.error || 'Something went wrong. Please try again.';
+      }
+    } catch {
+      msg.style.display = 'block'; msg.style.color = '#aa4060';
+      msg.textContent = 'Could not connect. Please try again.';
+    }
+  }
+
+  // Init the Leaflet map early so tiles are ready when the user scrolls down
+  document.addEventListener('DOMContentLoaded', () => {
+    initChurchMap();
+    setTimeout(() => churchMap.invalidateSize(), 200);
+  });
 
   document.getElementById('mood-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
