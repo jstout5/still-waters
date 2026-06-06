@@ -166,6 +166,7 @@
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
+  textarea { color: #1a2a3a; }
   textarea::placeholder { color: #aac0d0; font-style: italic; }
   textarea:focus { border-color: #7AABCC; box-shadow: 0 0 0 3px rgba(122,171,204,0.15); }
 
@@ -647,6 +648,22 @@
         text-transform:uppercase;text-align:center;margin-bottom:8px;">Read the Bible at Your Pace</div>
       <div class="feature-sub">Choose your daily reading time. Each evening's portion arrives straight to your inbox — the full text, ready before you rest.</div>
 
+      <!-- Featured: Bible in a Year -->
+      <div id="plan-1year" onclick="selectScrollPlan(15)" style="position:relative;cursor:pointer;
+        background:rgba(255,255,255,0.92);border:2px solid rgba(180,140,60,0.35);border-radius:14px;
+        padding:16px 18px;margin-bottom:14px;text-align:center;transition:all 0.2s;"
+        onmouseover="this.style.borderColor='rgba(180,140,60,0.7)'"
+        onmouseout="if(!this.classList.contains('selected'))this.style.borderColor='rgba(180,140,60,0.35)'">
+        <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+          background:linear-gradient(135deg,#b8922a,#d4a84b);color:#fff;
+          font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;
+          padding:3px 14px;border-radius:20px;white-space:nowrap;">✦ Most Popular</div>
+        <div style="font-family:'Cinzel',serif;font-size:16px;color:#7a5a1a;margin-top:4px;margin-bottom:3px;">Bible in a Year</div>
+        <div style="font-size:11px;color:#9a8050;letter-spacing:1px;margin-bottom:3px;">3 chapters · day · ~13 months</div>
+        <div style="font-style:italic;font-size:12px;color:#aaa090;">Genesis to Revelation, one chapter at a time</div>
+        <div style="position:absolute;top:10px;right:12px;font-size:13px;color:#b8922a;display:none;" id="check-1year">✓</div>
+      </div>
+
       <div class="plan-grid">
         <div class="plan-card" data-minutes="5" onclick="selectScrollPlan(5)">
           <div class="plan-check">✓</div>
@@ -1008,6 +1025,15 @@
     scrollPlan = minutes;
     document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
     document.querySelector(`.plan-card[data-minutes="${minutes}"]`)?.classList.add('selected');
+    // Sync the featured "Bible in a Year" card (maps to 15 min)
+    const featCard = document.getElementById('plan-1year');
+    const featCheck = document.getElementById('check-1year');
+    if (featCard && featCheck) {
+      const active = (minutes === 15);
+      featCard.style.borderColor = active ? 'rgba(180,140,60,0.8)' : 'rgba(180,140,60,0.35)';
+      featCard.style.background = active ? 'rgba(255,248,230,0.95)' : 'rgba(255,255,255,0.92)';
+      featCheck.style.display = active ? 'block' : 'none';
+    }
   }
 
   function setScrollVersion(v) {
