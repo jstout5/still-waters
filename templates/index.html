@@ -1032,14 +1032,46 @@
       });
       const data = await resp.json();
       msg.style.display = 'block';
-      if (data.status === 'created') {
-        msg.style.color = '#3a7a9a';
-        msg.textContent = '✦ Your Daily Scroll has begun. The Word will find you each evening.';
+      if (data.status === 'created' || data.status === 'updated') {
         document.getElementById('scroll-email').value = '';
-      } else if (data.status === 'updated') {
-        msg.style.color = '#3a7a9a';
-        msg.textContent = '✦ Your reading plan has been updated. A fresh journey begins tonight.';
-        document.getElementById('scroll-email').value = '';
+        const totalDays = { 5: 1189, 10: 595, 15: 397, 30: 238 }[scrollPlan];
+        const cpd      = { 5: 1,    10: 2,   15: 3,   30: 5   }[scrollPlan];
+        const pct = Math.max((1 / totalDays) * 100, 0.4).toFixed(2);
+        const label = data.status === 'updated' ? 'Journey reset — fresh start from Genesis.' : 'Your scroll has begun.';
+        msg.style.color = '';
+        msg.innerHTML = `
+          <div style="background:rgba(255,255,255,0.92);border:1px solid rgba(100,160,220,0.25);
+            border-left:4px solid #5A9CBB;border-radius:12px;padding:18px 20px;text-align:left;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#5A9CBB;
+              text-transform:uppercase;margin-bottom:10px;">✦ &nbsp;${label}</div>
+            <div style="font-family:'Cinzel',serif;font-size:13px;color:#2a4a6a;margin-bottom:12px;">
+              Day 1 &nbsp;of&nbsp; ${totalDays.toLocaleString()}
+            </div>
+            <!-- Track -->
+            <div style="position:relative;background:rgba(100,160,220,0.12);border-radius:6px;
+              height:10px;overflow:hidden;margin-bottom:6px;">
+              <!-- OT/NT divider at 78% -->
+              <div style="position:absolute;left:78.1%;top:0;bottom:0;width:1px;
+                background:rgba(122,171,204,0.5);z-index:1;"></div>
+              <!-- Fill -->
+              <div style="background:linear-gradient(90deg,#7AABCC,#5A9CBB);height:10px;
+                width:${pct}%;border-radius:6px;min-width:5px;
+                box-shadow:0 0 6px rgba(90,156,187,0.5);"></div>
+            </div>
+            <!-- Track labels -->
+            <div style="display:flex;justify-content:space-between;font-size:9px;
+              color:#aac0d0;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">
+              <span>Genesis</span>
+              <span>OT &nbsp;|&nbsp; NT</span>
+              <span>Revelation</span>
+            </div>
+            <div style="font-size:12px;color:#4a6a8a;margin-bottom:6px;">
+              First reading tonight: <span style="color:#3a6a8a;font-weight:600;font-style:italic;">Genesis 1</span>
+            </div>
+            <div style="font-size:10px;color:#aac0d0;letter-spacing:1px;text-transform:uppercase;">
+              ${scrollPlan} min / day &nbsp;·&nbsp; ${cpd} chapter${cpd > 1 ? 's' : ''} / day &nbsp;·&nbsp; ${scrollVer}
+            </div>
+          </div>`;
       } else {
         msg.style.color = '#aa4060';
         msg.textContent = data.error || 'Something went wrong. Please try again.';
