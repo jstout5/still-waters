@@ -128,6 +128,7 @@ def build_email(plan: dict, chapters_data: list[dict], day: int) -> str:
     <span style="font-size:10px;letter-spacing:3px;text-transform:uppercase;
       color:#fff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
       padding:5px 18px;border-radius:20px;">Day {day} of {total_days} &nbsp;·&nbsp; {minutes} min plan &nbsp;·&nbsp; {version}</span>
+    {f'<div style="margin-top:10px;font-size:14px;color:#E25C00;font-weight:700;letter-spacing:1px;">🔥 {plan.get("streak",1)}-Day Streak — Keep Going!</div>' if plan.get("streak", 1) >= 3 else ''}
   </div>
 
   <!-- Progress bar -->
@@ -263,11 +264,14 @@ def main():
             msg = MIMEMultipart("alternative")
             msg["From"] = GMAIL_USER
             msg["To"] = email
-            msg["Subject"] = f"Daily Scroll — Day {day} — {chapter_labels} — {today_str}"
+            streak = plan.get("streak", 1)
+            streak_str = f" 🔥 {streak} day streak" if streak >= 3 else ""
+            msg["Subject"] = f"Daily Scroll — Day {day}{streak_str} — {chapter_labels}"
             msg.attach(MIMEText(html, "html"))
             smtp.sendmail(GMAIL_USER, [email], msg.as_string())
             plan["current_day"] = day + 1
-            print(f"  ✓ {email} — Day {day}: {chapter_labels}")
+            plan["streak"] = plan.get("streak", 0) + 1
+            print(f"  sent: {email} — Day {day} (streak {plan['streak']}): {chapter_labels}")
 
     READING_PLANS_FILE.write_text(json.dumps({"plans": plans}, indent=2), encoding="utf-8")
     print("Done.")

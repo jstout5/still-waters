@@ -7,6 +7,7 @@ import os
 import json
 import re
 import hashlib
+from datetime import date
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context, send_file
 from anthropic import Anthropic
@@ -17,6 +18,8 @@ _cache = {}   # {hash: full_response_text}
 CACHE_MAX = 200  # keep last 200 unique searches
 
 SUBSCRIBERS_FILE = Path(__file__).parent / "subscribers.json"
+PRAYERS_FILE    = Path(__file__).parent / "prayers.json"
+VOTD_FILE       = Path(__file__).parent / ".tmp" / "verse_of_day.json"
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
@@ -391,6 +394,89 @@ def cancel_reading_plan():
         "<p style='color:#5a7a9a;margin-top:16px;'>Your place is saved. "
         "You may return and begin again at any time.</p></body></html>"
     )
+
+
+# ── PRAYER WALL ───────────────────────────────────────────────────────────────
+
+def load_prayers():
+    if PRAYERS_FILE.exists():
+        return json.loads(PRAYERS_FILE.read_text(encoding="utf-8")).get("prayers", [])
+    return []
+
+def save_prayers(prayers):
+    PRAYERS_FILE.write_text(json.dumps({"prayers": prayers}, indent=2), encoding="utf-8")
+
+
+@app.route("/prayers", methods=["GET"])
+def get_prayers():
+    return jsonify({"prayers": load_prayers()})
+
+
+@app.route("/prayers", methods=["POST"])
+def add_prayer():
+    import uuid
+    data = request.get_json()
+    name    = (data.get("name")    or "Anonymous").strip()[:40]
+    request_ = (data.get("request") or "").strip()[:280]
+    if not request_:
+        return jsonify({"error": "Prayer request is required"}), 400
+    prayers = load_prayers()
+    prayer = {
+        "id":      str(uuid.uuid4())[:8],
+        "name":    name,
+        "request": request_,
+        "count":   0,
+        "date":    date.today().isoformat(),
+    }
+    prayers.insert(0, prayer)
+    save_prayers(prayers[:100])   # keep last 100
+    return jsonify({"status": "added", "prayer": prayer})
+
+
+@app.route("/prayers/<pid>/pray", methods=["POST"])
+def pray_for(pid):
+    prayers = load_prayers()
+    for p in prayers:
+        if p["id"] == pid:
+            p["count"] = p.get("count", 0) + 1
+            save_prayers(prayers)
+            return jsonify({"count": p["count"]})
+    return jsonify({"error": "Not found"}), 404
+
+
+# ── VERSE OF THE DAY ──────────────────────────────────────────────────────────
+
+@app.route("/verse-of-day")
+def verse_of_day():
+    from datetime import date as dt
+    today = dt.today().isoformat()
+    VOTD_FILE.parent.mkdir(exist_ok=True)
+
+    # Serve cached version if it's from today
+    if VOTD_FILE.exists():
+        cached = json.loads(VOTD_FILE.read_text(encoding="utf-8"))
+        if cached.get("date") == today:
+            return jsonify(cached)
+
+    # Generate fresh verse of the day
+    try:
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            messages=[{"role": "user", "content":
+                f"Today is {today}. Return a single uplifting Bible verse for the day. "
+                "JSON only: {\"reference\":\"Book Ch:V\",\"text\":\"KJV text\",\"theme\":\"one word\"}"
+            }],
+        )
+        raw = resp.content[0].text.strip()
+        if "```" in raw:
+            raw = re.sub(r"```(?:json)?", "", raw).strip().strip("```").strip()
+        data = json.loads(raw)
+        data["date"] = today
+        VOTD_FILE.write_text(json.dumps(data), encoding="utf-8")
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"reference": "Psalm 23:1", "text": "The Lord is my shepherd; I shall not want.", "theme": "Peace", "date": today})
 
 
 @app.route("/verse-card", methods=["POST"])

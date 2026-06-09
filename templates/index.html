@@ -106,15 +106,40 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
+  /* ── DARK MODE VARIABLES ── */
+  :root {
+    --bg:        linear-gradient(180deg, #c8e8f8 0%, #ddf0fa 40%, #eef7fd 70%, #f5faff 100%);
+    --panel:     rgba(255,255,255,0.82);
+    --panel-border: rgba(100,160,220,0.25);
+    --text:      #1a2a3a;
+    --text-muted:#2a4a6a;
+    --input-bg:  rgba(255,255,255,0.9);
+    --card-bg:   rgba(255,255,255,0.88);
+    --footer-bg: #f5faff;
+    --header-bg: rgba(255,255,255,0.55);
+  }
+  body.dark {
+    --bg:        linear-gradient(180deg, #071218 0%, #0a1a24 40%, #0d1f2e 70%, #0f2236 100%);
+    --panel:     rgba(15,30,45,0.92);
+    --panel-border: rgba(122,171,204,0.2);
+    --text:      #d8ecf8;
+    --text-muted:#8ab8d0;
+    --input-bg:  rgba(10,25,38,0.9);
+    --card-bg:   rgba(12,24,36,0.9);
+    --footer-bg: #071218;
+    --header-bg: rgba(7,18,24,0.85);
+  }
+
   * { margin:0; padding:0; box-sizing:border-box; }
 
   body {
     min-height: 100vh;
-    background: linear-gradient(180deg, #c8e8f8 0%, #ddf0fa 40%, #eef7fd 70%, #f5faff 100%);
+    background: var(--bg);
     font-family: 'EB Garamond', Georgia, serif;
-    color: #1a2a3a;
+    color: var(--text);
     position: relative;
     overflow-x: hidden;
+    transition: background 0.4s, color 0.3s;
   }
 
   /* ── CLOUDS ── */
@@ -185,13 +210,24 @@
   /* ── PAGE CONTENT (above clouds) ── */
   .page-wrap { position: relative; z-index: 1; }
 
+  /* ── DARK MODE TOGGLE ── */
+  .dark-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(100,160,200,0.3);
+    border-radius: 20px; padding: 6px 14px; cursor: pointer;
+    font-size: 16px; backdrop-filter: blur(8px);
+    transition: all 0.2s; line-height: 1;
+  }
+  .dark-toggle:hover { background: rgba(255,255,255,0.35); }
+  body.dark .dark-toggle { background: rgba(0,0,0,0.3); border-color: rgba(122,171,204,0.3); }
+
   /* ── HEADER ── */
   .header {
     text-align: center;
     padding: 52px 20px 36px;
     border-bottom: 1px solid rgba(100,150,200,0.2);
     position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.1) 100%);
+    background: var(--header-bg);
     backdrop-filter: blur(4px);
   }
   .header::before, .header::after {
@@ -230,8 +266,8 @@
 
   /* ── SEARCH CARD ── */
   .search-card {
-    background: rgba(255,255,255,0.82);
-    border: 1px solid rgba(100,160,220,0.25);
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
     border-top: 3px solid #7AABCC;
     border-radius: 16px;
     padding: 36px 40px;
@@ -253,7 +289,7 @@
 
   textarea {
     width: 100%;
-    background: rgba(255,255,255,0.9);
+    background: var(--input-bg);
     border: 1px solid rgba(100,160,220,0.3);
     border-radius: 10px;
     color: #1a2a3a;
@@ -367,7 +403,7 @@
   }
 
   .verse-card {
-    background: rgba(255,255,255,0.88);
+    background: var(--card-bg);
     border: 1px solid rgba(100,160,220,0.2);
     border-left: 4px solid #7AABCC;
     border-radius: 12px;
@@ -615,6 +651,116 @@
   .plan-chapters { font-size: 10px; color: #2a5a7a; letter-spacing: 1px; margin-bottom: 4px; }
   .plan-timeline { font-style: italic; font-size: 12px; color: #1a4a6a; }
 
+  /* ── VERSE OF THE DAY ── */
+  .votd-section {
+    padding: 56px 20px 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .votd-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(122,171,204,0.1), transparent 70%);
+  }
+  .votd-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
+    color: #5A9CBB; margin-bottom: 20px; position: relative;
+  }
+  .votd-verse {
+    font-size: clamp(22px,3.5vw,38px);
+    line-height: 1.7; font-style: italic;
+    color: var(--text); max-width: 760px;
+    margin: 0 auto 20px; position: relative;
+    font-weight: 400;
+  }
+  .votd-verse::before {
+    content: '\201C';
+    font-size: 5em; color: rgba(122,171,204,0.15);
+    position: absolute; top: -30px; left: -20px;
+    font-family: Georgia,serif; line-height: 1;
+  }
+  .votd-ref {
+    font-family: 'Cinzel', serif;
+    font-size: 14px; letter-spacing: 3px; color: #5A9CBB;
+    text-transform: uppercase; position: relative;
+  }
+  .votd-theme {
+    display: inline-block;
+    background: rgba(90,156,187,0.1);
+    border: 1px solid rgba(90,156,187,0.25);
+    border-radius: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: #5A9CBB; padding: 4px 16px;
+    margin-bottom: 16px; position: relative;
+  }
+
+  /* ── TOPICAL CHIPS ── */
+  .topic-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 14px;
+  }
+  .chip {
+    font-family: 'EB Garamond', serif;
+    font-size: 14px; font-style: italic;
+    color: #2a5a7a; background: rgba(90,156,187,0.07);
+    border: 1px solid rgba(90,156,187,0.2);
+    border-radius: 20px; padding: 5px 16px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .chip:hover { background: rgba(90,156,187,0.15); border-color: #7AABCC; color: #0a2040; }
+
+  /* ── COPY BUTTON ── */
+  .verse-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .copy-btn {
+    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: #5A9CBB;
+    background: transparent; border: 1px solid rgba(100,160,220,0.3);
+    border-radius: 20px; padding: 7px 18px; cursor: pointer; transition: all 0.2s;
+  }
+  .copy-btn:hover { background: rgba(90,156,187,0.08); border-color: #7AABCC; }
+  .copy-btn.copied { color: #1a6b2e; border-color: rgba(26,107,46,0.4); }
+
+  /* ── PRAYER WALL ── */
+  .prayer-wall { max-width: 780px; margin: 0 auto; padding: 0 24px 64px; }
+  .prayer-input-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-top: 3px solid #7AABCC;
+    border-radius: 16px; padding: 28px 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 20px rgba(60,100,160,0.08);
+  }
+  .prayer-feed { display: flex; flex-direction: column; gap: 14px; }
+  .prayer-card {
+    background: var(--card-bg);
+    border: 1px solid var(--panel-border);
+    border-left: 4px solid rgba(122,171,204,0.4);
+    border-radius: 12px; padding: 18px 20px;
+    transition: border-left-color 0.2s;
+  }
+  .prayer-card:hover { border-left-color: #7AABCC; }
+  .prayer-name {
+    font-family: 'Cinzel', serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: #5A9CBB; margin-bottom: 8px;
+  }
+  .prayer-text {
+    font-size: 16px; line-height: 1.7; font-style: italic;
+    color: var(--text); margin-bottom: 12px;
+  }
+  .pray-btn {
+    background: none; border: 1px solid rgba(100,160,220,0.25);
+    border-radius: 20px; padding: 5px 14px;
+    font-family: 'Cinzel', serif; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: #5A9CBB; cursor: pointer; transition: all 0.2s;
+  }
+  .pray-btn:hover { background: rgba(90,156,187,0.08); }
+  .pray-btn.prayed { color: #1a6b2e; border-color: rgba(26,107,46,0.3); }
+
   /* ── FOOTER ── */
   .footer {
     text-align: center;
@@ -678,6 +824,16 @@
 
 <div class="page-wrap">
 
+<button class="dark-toggle" onclick="toggleDark()" id="dark-btn" title="Toggle dark mode">🌙</button>
+
+<!-- ── VERSE OF THE DAY ── -->
+<div class="votd-section" id="votd-section">
+  <div class="votd-eyebrow">✦ &nbsp; Verse of the Day &nbsp; ✦</div>
+  <div id="votd-theme" class="votd-theme">Loading…</div>
+  <div id="votd-verse" class="votd-verse" style="opacity:0;transition:opacity 0.8s;"></div>
+  <div id="votd-ref"   class="votd-ref"   style="opacity:0;transition:opacity 0.8s 0.2s;"></div>
+</div>
+
 <div class="header">
   <div class="ornament">✾ ❀ ✾</div>
   <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:#7a9ab0;text-transform:uppercase;margin-bottom:6px;">Still Waters</div>
@@ -694,6 +850,22 @@
       placeholder="I am feeling anxious about the future... I am grieving a loss... I need strength to forgive..."
       rows="3"
     ></textarea>
+
+    <!-- Topical quick-picks -->
+    <div class="topic-chips" id="topic-chips">
+      <span class="chip" onclick="quickSearch('I am anxious and afraid')">Anxiety</span>
+      <span class="chip" onclick="quickSearch('I am grieving and heartbroken')">Grief</span>
+      <span class="chip" onclick="quickSearch('I need to forgive someone')">Forgiveness</span>
+      <span class="chip" onclick="quickSearch('I feel hopeless and lost')">Hope</span>
+      <span class="chip" onclick="quickSearch('I am angry and frustrated')">Anger</span>
+      <span class="chip" onclick="quickSearch('I feel completely alone')">Loneliness</span>
+      <span class="chip" onclick="quickSearch('I need strength to keep going')">Strength</span>
+      <span class="chip" onclick="quickSearch('I cannot sleep and my mind races')">Can\'t Sleep</span>
+      <span class="chip" onclick="quickSearch('I need purpose and direction')">Purpose</span>
+      <span class="chip" onclick="quickSearch('I am struggling with my marriage')">Marriage</span>
+      <span class="chip" onclick="quickSearch('I feel guilty and need God\'s grace')">Grace</span>
+      <span class="chip" onclick="quickSearch('I am filled with joy and gratitude')">Joy</span>
+    </div>
 
     <div class="version-row">
       <span class="version-label">Version</span>
@@ -859,6 +1031,34 @@
   </div>
 </div>
 
+<!-- ── PRAYER WALL ── -->
+<div class="prayer-wall" id="prayer-wall">
+  <div class="divider">✿ ✿ ✿</div>
+  <div class="prayer-input-card">
+    <div class="sec-head" style="margin-bottom:20px;">
+      <span class="sec-eyebrow">🙏 Community</span>
+      <span class="sec-title">Prayer Wall</span>
+      <span class="sec-sub">Share what's on your heart. Others will pray with you.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:500px;margin:0 auto;">
+      <input id="prayer-name" type="text" placeholder="Your name (or leave blank)"
+        style="background:var(--input-bg);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+        color:var(--text);font-family:'EB Garamond',serif;font-size:16px;padding:11px 16px;outline:none;">
+      <textarea id="prayer-request" rows="3" placeholder="Lord, I'm asking for…"
+        style="background:var(--input-bg);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+        color:var(--text);font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
+        resize:vertical;outline:none;"></textarea>
+      <button onclick="submitPrayer()" class="seek-btn" style="padding:13px;">
+        Submit Prayer Request
+      </button>
+      <div id="prayer-msg" style="text-align:center;font-style:italic;font-size:14px;display:none;color:#5A9CBB;"></div>
+    </div>
+  </div>
+  <div class="prayer-feed" id="prayer-feed">
+    <div style="text-align:center;font-style:italic;color:#aaa;padding:24px;">Loading prayers…</div>
+  </div>
+</div>
+
 <!-- ── FIND A CHURCH NEAR YOU ── -->
 <div style="max-width:780px;margin:0 auto;padding:0 24px 64px;">
   <div class="feature-panel">
@@ -921,14 +1121,27 @@
     const safeText = encodeURIComponent(v.text || '');
     const safeRef  = encodeURIComponent(v.reference || '');
     const safeRefl = encodeURIComponent(v.reflection || '');
+    const copyText = `"${v.text}" — ${v.reference} (${currentVersion})`;
+    const safeCopy = copyText.replace(/'/g,"\\'");
     return `<div class="verse-card">
       <div class="verse-reference">${v.reference} &nbsp;&#8212;&nbsp; ${currentVersion}</div>
       <div class="verse-text">${v.text}</div>
       <div class="verse-reflection">${v.reflection}</div>
-      <button class="share-btn" onclick="downloadVerseCard('${safeText}','${safeRef}','${safeRefl}',this)">
-        &#8681; Save &amp; Share Card
-      </button>
+      <div class="verse-actions">
+        <button class="copy-btn" onclick="copyVerse('${safeCopy}',this)">&#128203; Copy Verse</button>
+        <button class="share-btn" onclick="downloadVerseCard('${safeText}','${safeRef}','${safeRefl}',this)">&#8681; Save Card</button>
+      </div>
     </div>`;
+  }
+
+  function copyVerse(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋 Copy Verse'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      btn.textContent = 'Copy failed';
+    });
   }
 
   async function downloadVerseCard(text, ref, refl, btn) {
@@ -1340,6 +1553,95 @@
 </script>
 
 <script>
+  // ── DARK MODE ─────────────────────────────────────────────────────────────
+  function toggleDark() {
+    const dark = document.body.classList.toggle('dark');
+    document.getElementById('dark-btn').textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('sw-dark', dark ? '1' : '');
+  }
+  if (localStorage.getItem('sw-dark')) {
+    document.body.classList.add('dark');
+    document.getElementById('dark-btn').textContent = '☀️';
+  }
+
+  // ── VERSE OF THE DAY ──────────────────────────────────────────────────────
+  async function loadVOTD() {
+    try {
+      const data = await fetch('/verse-of-day').then(r => r.json());
+      const themeEl = document.getElementById('votd-theme');
+      const verseEl = document.getElementById('votd-verse');
+      const refEl   = document.getElementById('votd-ref');
+      if (themeEl) themeEl.textContent = (data.theme || 'Today\'s Verse').toUpperCase();
+      if (verseEl) { verseEl.textContent = '“' + (data.text || '') + '”'; verseEl.style.opacity = '1'; }
+      if (refEl)   { refEl.textContent   = '— ' + (data.reference || ''); refEl.style.opacity = '1'; }
+    } catch(e) {}
+  }
+  loadVOTD();
+
+  // ── TOPICAL QUICK-PICKS ───────────────────────────────────────────────────
+  function quickSearch(topic) {
+    document.getElementById('mood-input').value = topic;
+    document.getElementById('mood-input').focus();
+    seekScripture();
+  }
+
+  // ── PRAYER WALL ───────────────────────────────────────────────────────────
+  const prayedSet = new Set(JSON.parse(localStorage.getItem('sw-prayed') || '[]'));
+
+  async function loadPrayers() {
+    try {
+      const data = await fetch('/prayers').then(r => r.json());
+      const feed = document.getElementById('prayer-feed');
+      if (!data.prayers?.length) {
+        feed.innerHTML = '<div style="text-align:center;font-style:italic;color:#aaa;padding:24px;">Be the first to share a prayer request.</div>';
+        return;
+      }
+      feed.innerHTML = data.prayers.map(p => {
+        const prayed = prayedSet.has(p.id);
+        return `<div class="prayer-card" id="pc-${p.id}">
+          <div class="prayer-name">${p.name || 'Anonymous'} &nbsp;·&nbsp; ${p.date || ''}</div>
+          <div class="prayer-text">${p.request}</div>
+          <button class="pray-btn ${prayed?'prayed':''}" onclick="prayFor('${p.id}',this)">
+            🙏 ${prayed ? 'Praying' : 'Pray'} &nbsp;<span id="pc-count-${p.id}">${p.count||0}</span>
+          </button>
+        </div>`;
+      }).join('');
+    } catch(e) {}
+  }
+
+  async function submitPrayer() {
+    const name = document.getElementById('prayer-name').value.trim();
+    const req  = document.getElementById('prayer-request').value.trim();
+    const msg  = document.getElementById('prayer-msg');
+    if (!req) { document.getElementById('prayer-request').focus(); return; }
+    msg.style.display = 'none';
+    const resp = await fetch('/prayers', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name, request: req })
+    });
+    const data = await resp.json();
+    if (data.status === 'added') {
+      msg.style.display = 'block';
+      msg.textContent = '✦ Your prayer has been received. You are not alone.';
+      document.getElementById('prayer-name').value = '';
+      document.getElementById('prayer-request').value = '';
+      loadPrayers();
+    }
+  }
+
+  async function prayFor(id, btn) {
+    if (prayedSet.has(id)) return;
+    prayedSet.add(id);
+    localStorage.setItem('sw-prayed', JSON.stringify([...prayedSet]));
+    btn.classList.add('prayed');
+    const data = await fetch(`/prayers/${id}/pray`, { method: 'POST' }).then(r => r.json());
+    const countEl = document.getElementById(`pc-count-${id}`);
+    if (countEl) countEl.textContent = data.count || '';
+    btn.innerHTML = `🙏 Praying &nbsp;<span id="pc-count-${id}">${data.count || ''}</span>`;
+  }
+
+  loadPrayers();
+
   // Register service worker for static asset caching
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
