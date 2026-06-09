@@ -6,10 +6,15 @@ Returns relevant Bible passages based on the user's emotional state or life issu
 import os
 import json
 import re
+import hashlib
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context, send_file
 from anthropic import Anthropic
 from dotenv import load_dotenv
+
+# Simple in-memory cache for verse lookups (mood → streamed result)
+_cache = {}   # {hash: full_response_text}
+CACHE_MAX = 200  # keep last 200 unique searches
 
 SUBSCRIBERS_FILE = Path(__file__).parent / "subscribers.json"
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
@@ -128,22 +133,16 @@ Be spiritually sensitive, theologically grounded, and deeply human in your respo
 Never be preachy — speak as a trusted guide sharing ancient wisdom."""
 
 
-STREAM_PROMPT = """The person is feeling or experiencing: "{mood}"
+STREAM_PROMPT = """Feeling/situation: "{mood}" | Version: {version}
 
-Bible version requested: {version}
+Output ONLY newline-delimited JSON, one object per line, no markdown.
 
-Output ONLY newline-delimited JSON — one object per line, no other text, no markdown.
-
-Line 1 — reflection:
-{{"type":"reflection","text":"One warm sentence acknowledging what they are going through"}}
-
-Lines 2-5 — one verse per line:
-{{"type":"verse","reference":"Book Chapter:Verse","text":"Exact verse text in {version}","reflection":"1-2 sentences why this speaks to this moment"}}
-
-Final line — books:
+{{"type":"reflection","text":"One warm sentence acknowledging this"}}
+{{"type":"verse","reference":"Book Ch:V","text":"Exact {version} text","reflection":"1-2 sentences"}}
+(4 verses total)
 {{"type":"books","items":[{{"title":"...","author":"...","description":"...","amazon_search":"..."}}]}}
 
-Return 4 verses and 3 books. Output each line immediately as you generate it."""
+3 books. Stream each line immediately."""
 
 
 def stream_verses(mood: str, version: str):
@@ -217,6 +216,18 @@ def stream():
     if not mood:
         return jsonify({"error": "Please describe what you are feeling."}), 400
 
+    cache_key = hashlib.md5(f"{mood.lower()[:120]}|{version}".encode()).hexdigest()
+
+    # Serve cached result if available (replay SSE events)
+    if cache_key in _cache:
+        cached_lines = _cache[cache_key]
+        def replay():
+            for line in cached_lines:
+                yield line
+            yield "data: {\"type\":\"done\"}\n\n"
+        return Response(replay(), mimetype="text/event-stream",
+                        headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
+
     # Kick off SermonAudio in background thread
     from concurrent.futures import ThreadPoolExecutor
     executor = ThreadPoolExecutor(max_workers=1)
@@ -224,15 +235,23 @@ def stream():
 
     @stream_with_context
     def generate():
-        yield from stream_verses(mood, version)
-        # Append sermons once Claude is done
+        collected = []
+        for chunk in stream_verses(mood, version):
+            collected.append(chunk)
+            yield chunk
         try:
             sermons = sermons_fut.result(timeout=10)
             if sermons:
-                yield f"data: {json.dumps({'type':'sermons','items':sermons})}\n\n"
+                s_chunk = f"data: {json.dumps({'type':'sermons','items':sermons})}\n\n"
+                collected.append(s_chunk)
+                yield s_chunk
         except Exception:
             pass
         executor.shutdown(wait=False)
+        # Store in cache (evict oldest if full)
+        if len(_cache) >= CACHE_MAX:
+            _cache.pop(next(iter(_cache)))
+        _cache[cache_key] = collected
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"})
@@ -483,6 +502,29 @@ def verse_card():
                          as_attachment=True, download_name=filename)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    from flask import Response
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://still-waters-scripture.onrender.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>"""
+    return Response(xml, mimetype="application/xml")
+
+
+@app.route("/robots.txt")
+def robots():
+    from flask import Response
+    txt = """User-agent: *
+Allow: /
+Sitemap: https://still-waters-scripture.onrender.com/sitemap.xml"""
+    return Response(txt, mimetype="text/plain")
 
 
 if __name__ == "__main__":
