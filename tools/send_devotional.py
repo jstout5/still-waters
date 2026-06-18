@@ -217,7 +217,7 @@ def main():
             msg["Subject"] = f"Still Waters — {d.get('theme', 'Daily Verse')} — {today}"
             msg.attach(MIMEText(html, "html"))
             s.sendmail(GMAIL_USER, [email], msg.as_string())
-            print(f"  ✓ {email}")
+            print(f"  sent: {email}")
 
     print("Devotional sent.")
 
