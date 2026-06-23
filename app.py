@@ -107,12 +107,33 @@ CHAPTERS_PER_DAY_MAP = {5: 1, 10: 2, 15: 3, 30: 5}
 
 
 def load_reading_plans() -> list:
+    if _sb_available():
+        try:
+            import requests as req
+            r = req.get(f"{SUPABASE_URL}/rest/v1/reading_plans?select=*",
+                        headers=_sb_headers(), timeout=8)
+            if r.status_code == 200:
+                return r.json()
+        except Exception:
+            pass
     if READING_PLANS_FILE.exists():
         return json.loads(READING_PLANS_FILE.read_text(encoding="utf-8")).get("plans", [])
     return []
 
 
 def save_reading_plans(plans: list):
+    if _sb_available():
+        try:
+            import requests as req
+            for plan in plans:
+                req.post(
+                    f"{SUPABASE_URL}/rest/v1/reading_plans",
+                    headers={**_sb_headers(), "Prefer": "resolution=merge-duplicates"},
+                    json=plan, timeout=8,
+                )
+            return
+        except Exception:
+            pass
     READING_PLANS_FILE.write_text(json.dumps({"plans": plans}, indent=2), encoding="utf-8")
 
 

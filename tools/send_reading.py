@@ -23,6 +23,48 @@ GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 APP_URL = os.getenv("APP_URL", "http://localhost:5050")
 READING_PLANS_FILE = Path(__file__).parent.parent / "reading_plans.json"
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
+
+def _sb_headers():
+    return {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json", "Prefer": "return=minimal"}
+
+
+def _sb_available():
+    return bool(SUPABASE_URL and SUPABASE_KEY)
+
+
+def load_plans() -> list:
+    if _sb_available():
+        try:
+            r = requests.get(
+                f"{SUPABASE_URL}/rest/v1/reading_plans?active=eq.true&select=*",
+                headers=_sb_headers(), timeout=8,
+            )
+            if r.status_code == 200:
+                return r.json()
+        except Exception as e:
+            print(f"  Supabase load failed: {e} — falling back to local file")
+    if READING_PLANS_FILE.exists():
+        plans = json.loads(READING_PLANS_FILE.read_text(encoding="utf-8")).get("plans", [])
+        return [p for p in plans if p.get("active")]
+    return []
+
+
+def update_plan(plan: dict):
+    if _sb_available():
+        try:
+            requests.patch(
+                f"{SUPABASE_URL}/rest/v1/reading_plans?email=eq.{plan['email']}",
+                headers=_sb_headers(),
+                json={k: v for k, v in plan.items() if k != "email"},
+                timeout=8,
+            )
+            return
+        except Exception as e:
+            print(f"  Supabase update failed for {plan['email']}: {e}")
 
 BIBLE_BOOKS = [
     ("Genesis", 50), ("Exodus", 40), ("Leviticus", 27), ("Numbers", 36),
@@ -213,12 +255,7 @@ def build_completion_email(plan: dict) -> str:
 
 
 def main():
-    if not READING_PLANS_FILE.exists():
-        print("No reading_plans.json found — nothing to send.")
-        return
-
-    plans = json.loads(READING_PLANS_FILE.read_text(encoding="utf-8")).get("plans", [])
-    active = [p for p in plans if p.get("active")]
+    active = load_plans()
 
     if not active:
         print("No active reading plans.")
@@ -234,24 +271,22 @@ def main():
             day = plan.get("current_day", 1)
             cpd = plan.get("chapters_per_day", 3)
             version = plan.get("version", "KJV")
-            today_str = date.today().strftime("%B %d, %Y")
 
             to_read = chapters_for_day(day, cpd)
 
             if not to_read:
-                # Completed — send congratulations
                 html = build_completion_email(plan)
                 msg = MIMEMultipart("alternative")
                 msg["From"] = GMAIL_USER
                 msg["To"] = email
-                msg["Subject"] = f"Still Waters — You Have Read the Whole Bible 🕊"
+                msg["Subject"] = "Still Waters — You Have Read the Whole Bible"
                 msg.attach(MIMEText(html, "html"))
                 smtp.sendmail(GMAIL_USER, [email], msg.as_string())
                 plan["active"] = False
+                update_plan(plan)
                 print(f"  ✓ {email} — COMPLETED the Bible!")
                 continue
 
-            # Fetch chapter texts
             chapters_data = []
             for book, ch in to_read:
                 print(f"    Fetching {book} {ch}…")
@@ -265,15 +300,15 @@ def main():
             msg["From"] = GMAIL_USER
             msg["To"] = email
             streak = plan.get("streak", 1)
-            streak_str = f" 🔥 {streak} day streak" if streak >= 3 else ""
+            streak_str = f" {streak} day streak" if streak >= 3 else ""
             msg["Subject"] = f"Daily Scroll — Day {day}{streak_str} — {chapter_labels}"
             msg.attach(MIMEText(html, "html"))
             smtp.sendmail(GMAIL_USER, [email], msg.as_string())
             plan["current_day"] = day + 1
             plan["streak"] = plan.get("streak", 0) + 1
+            update_plan(plan)
             print(f"  sent: {email} — Day {day} (streak {plan['streak']}): {chapter_labels}")
 
-    READING_PLANS_FILE.write_text(json.dumps({"plans": plans}, indent=2), encoding="utf-8")
     print("Done.")
 
 
