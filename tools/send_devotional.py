@@ -1,6 +1,6 @@
 """
 Still Waters — Daily Email
-One email per subscriber: verse, reflection, prayer, + reading plan card (no inline text).
+Sends the actual Bible reading for the day + a short devotional.
 Outer brand: JStout Inc.  Inner content: Still Waters.
 
 Usage: python tools/send_devotional.py
@@ -9,6 +9,7 @@ Usage: python tools/send_devotional.py
 import json
 import os
 import smtplib
+import time
 from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,6 +17,7 @@ from urllib.parse import quote_plus
 
 import psycopg2
 import psycopg2.extras
+import requests
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -43,8 +45,8 @@ BIBLE_BOOKS = [
     ("James",5),("1 Peter",5),("2 Peter",3),("1 John",5),("2 John",1),
     ("3 John",1),("Jude",1),("Revelation",22),
 ]
-ALL_CH     = [(b, ch) for b, n in BIBLE_BOOKS for ch in range(1, n+1)]
-TOTAL      = len(ALL_CH)
+ALL_CH = [(b, ch) for b, n in BIBLE_BOOKS for ch in range(1, n+1)]
+TOTAL  = len(ALL_CH)
 
 
 # ── DB ──────────────────────────────────────────────────────────────────────
@@ -88,19 +90,47 @@ def mark_complete(email: str):
         conn.commit()
 
 
-# ── CONTENT ─────────────────────────────────────────────────────────────────
+# ── BIBLE TEXT ───────────────────────────────────────────────────────────────
+
+def fetch_chapter_html(book: str, chapter: int, version: str = "kjv") -> str:
+    slug = book.lower().replace(" ", "+")
+    url  = f"https://bible-api.com/{slug}+{chapter}?translation={version.lower()}"
+    try:
+        r    = requests.get(url, timeout=12)
+        data = r.json()
+        verses = data.get("verses", [])
+        if not verses:
+            return f"<p><em>{book} {chapter} — text unavailable</em></p>"
+        lines = []
+        for v in verses:
+            num  = v.get("verse", "")
+            text = v.get("text", "").strip()
+            lines.append(
+                f'<sup style="font-size:9px;color:#9ab0c0;margin-right:2px;">{num}</sup>'
+                f'<span style="line-height:1.9;">{text} </span>'
+            )
+        return (
+            f'<div style="font-size:15px;color:#1a2a3a;font-family:Georgia,serif;'
+            f'margin-bottom:8px;font-weight:700;color:#2a4a6a;">'
+            f'{book} {chapter}</div>'
+            f'<p style="font-size:15px;line-height:1.9;color:#1a2a3a;margin:0 0 20px;">{"".join(lines)}</p>'
+        )
+    except Exception as e:
+        return f"<p><em>{book} {chapter} — could not load ({e})</em></p>"
+
+
+# ── DEVOTIONAL ───────────────────────────────────────────────────────────────
 
 def get_devotional() -> dict:
     today = date.today().strftime("%B %d, %Y")
-    resp = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=900,
+    resp  = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=400,
         messages=[{"role": "user", "content": f"""Morning devotional for {today}. JSON only:
 {{
   "verse_reference": "Book Chapter:Verse",
   "verse_text": "Full KJV verse text",
   "theme": "One word",
-  "reflection": "2 sentences of pastoral reflection",
   "prayer": "One sentence morning prayer"
 }}"""}],
     )
@@ -132,51 +162,56 @@ def reading_label(chapters: list[tuple]) -> str:
     return f"{first[0]} {first[1]} · {last[0]} {last[1]}"
 
 
-# ── EMAIL ────────────────────────────────────────────────────────────────────
+# ── EMAIL ─────────────────────────────────────────────────────────────────────
 
-def build_email(sub: dict, dev: dict, reading: str, day: int, total_days: int, progress_pct: int) -> str:
+def build_email(sub: dict, dev: dict, chapters: list[tuple], day: int,
+                total_days: int, progress_pct: int, chapter_html: str) -> str:
     today_str  = date.today().strftime("%B %d, %Y")
     email      = sub["email"]
     unsub      = f"{APP_URL}/unsubscribe?email={quote_plus(email)}"
     plan_unsub = f"{APP_URL}/reading-plan/unsubscribe?email={quote_plus(email)}"
-    has_plan   = bool(sub.get("has_plan") and reading)
+    has_plan   = bool(sub.get("has_plan") and chapters)
     streak     = sub.get("streak") or 0
     minutes    = sub.get("minutes_per_day") or 15
     version    = sub.get("version") or "KJV"
+    label      = reading_label(chapters)
 
-    reading_block = ""
-    if has_plan:
+    streak_line = ""
+    if streak >= 3:
         streak_line = (
-            f'<div style="font-size:12px;color:#E25C00;font-weight:700;margin-top:10px;">'
-            f'🔥 {streak}-Day Streak — Keep Going!</div>'
-        ) if streak >= 3 else ""
+            f'<div style="font-size:12px;color:#E25C00;font-weight:700;margin:10px 0 0;">'
+            f'🔥 {streak}-Day Streak — Keep it up!</div>'
+        )
 
-        reading_block = f"""
-  <div style="background:#ffffff;border:1px solid #c8dff0;border-left:4px solid #5A9CBB;
+    reading_section = ""
+    if has_plan:
+        reading_section = f"""
+  <!-- Reading -->
+  <div style="background:#fff;border:1px solid #c8dff0;border-left:4px solid #5A9CBB;
     border-radius:12px;padding:24px 28px;margin-bottom:20px;">
-    <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-      color:#5A9CBB;margin-bottom:12px;">📖 &nbsp; The Daily Scroll</div>
 
-    <div style="font-size:22px;font-style:italic;color:#1a2a3a;margin-bottom:6px;">{reading}</div>
-    <div style="font-size:11px;color:#7a9ab0;letter-spacing:1px;margin-bottom:16px;">
+    <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
+      color:#5A9CBB;margin-bottom:6px;">📖 &nbsp; Today's Reading</div>
+    <div style="font-size:20px;font-weight:700;color:#1a2a3a;margin-bottom:4px;">{label}</div>
+    <div style="font-size:11px;color:#7a9ab0;letter-spacing:1px;margin-bottom:14px;">
       Day {day} of {total_days} &nbsp;·&nbsp; {minutes} min &nbsp;·&nbsp; {version}
     </div>
 
-    <div style="background:#e8f2f8;border-radius:4px;height:5px;overflow:hidden;margin-bottom:16px;">
-      <div style="background:linear-gradient(90deg,#7AABCC,#5A9CBB);height:5px;
+    <!-- Progress bar -->
+    <div style="background:#e8f2f8;border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px;">
+      <div style="background:linear-gradient(90deg,#7AABCC,#5A9CBB);height:6px;
         width:{progress_pct}%;min-width:4px;border-radius:4px;"></div>
     </div>
+    <div style="font-size:10px;color:#aac0d0;margin-bottom:18px;">{progress_pct}% through the Bible</div>
 
     {streak_line}
 
-    <a href="{APP_URL}/read" target="_blank"
-      style="display:inline-block;margin-top:16px;font-size:11px;letter-spacing:2px;
-      text-transform:uppercase;color:#ffffff;background:#5A9CBB;
-      text-decoration:none;padding:10px 24px;border-radius:8px;">
-      Read Now &rarr;
-    </a>
+    <!-- Chapter text -->
+    <div style="border-top:1px solid #e0eef8;margin-top:16px;padding-top:16px;">
+      {chapter_html}
+    </div>
 
-    <div style="margin-top:14px;font-size:10px;color:#aac0d0;">
+    <div style="margin-top:16px;font-size:10px;color:#aac0d0;">
       <a href="{plan_unsub}" style="color:#aac0d0;">Pause reading plan</a>
     </div>
   </div>"""
@@ -184,7 +219,7 @@ def build_email(sub: dict, dev: dict, reading: str, day: int, total_days: int, p
     return f"""<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#111;font-family:Georgia,'Times New Roman',serif;">
-<div style="max-width:580px;margin:0 auto;">
+<div style="max-width:600px;margin:0 auto;">
 
   <!-- JStoutInc band -->
   <div style="background:#c8102e;padding:12px 24px;border-radius:10px 10px 0 0;
@@ -198,77 +233,48 @@ def build_email(sub: dict, dev: dict, reading: str, day: int, total_days: int, p
   <!-- Body -->
   <div style="background:#ddeef8;padding:32px 24px 24px;">
 
-    <!-- Header -->
     <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-size:18px;color:#7AABCC;letter-spacing:8px;margin-bottom:8px;">✾ ❀ ✾</div>
       <div style="font-size:26px;font-weight:bold;color:#2a4a6a;letter-spacing:4px;
         text-transform:uppercase;">Still Waters</div>
-      <div style="font-size:12px;color:#5a7a9a;margin-top:4px;font-style:italic;">
-        {today_str}
-      </div>
+      <div style="font-size:12px;color:#5a7a9a;margin-top:4px;font-style:italic;">{today_str}</div>
     </div>
 
-    <!-- Theme chip -->
-    <div style="text-align:center;margin-bottom:20px;">
-      <span style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#fff;
-        background:linear-gradient(135deg,#5A9CBB,#3A7A9A);padding:5px 18px;border-radius:20px;">
-        {dev.get('theme','').upper()}
-      </span>
-    </div>
+    {reading_section}
 
-    <!-- Verse -->
+    <!-- Devotional verse -->
     <div style="background:#fff;border-left:4px solid #7AABCC;border-radius:10px;
-      padding:24px 28px;margin-bottom:18px;">
+      padding:20px 24px;margin-bottom:16px;">
       <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-        color:#5A9CBB;margin-bottom:12px;">Verse of the Day</div>
-      <div style="font-size:20px;line-height:1.8;color:#1a2a3a;font-style:italic;margin-bottom:12px;">
+        color:#5A9CBB;margin-bottom:10px;">{dev.get('theme','').upper()}</div>
+      <div style="font-size:17px;line-height:1.8;color:#1a2a3a;font-style:italic;margin-bottom:10px;">
         &ldquo;{dev.get('verse_text','')}&rdquo;
       </div>
-      <div style="font-size:11px;color:#5A9CBB;letter-spacing:2px;">
-        &mdash; {dev.get('verse_reference','')} &nbsp;&middot;&nbsp; KJV
+      <div style="font-size:11px;color:#5A9CBB;letter-spacing:1px;">
+        &mdash; {dev.get('verse_reference','')}
       </div>
-    </div>
-
-    <!-- Reflection -->
-    <div style="font-size:15px;line-height:1.8;color:#3a5a7a;font-style:italic;
-      margin-bottom:18px;padding:0 4px;">
-      {dev.get('reflection','')}
     </div>
 
     <!-- Prayer -->
-    <div style="background:rgba(255,255,255,.65);border-radius:10px;
-      padding:16px 20px;margin-bottom:24px;text-align:center;">
+    <div style="background:rgba(255,255,255,.6);border-radius:10px;
+      padding:14px 20px;margin-bottom:20px;text-align:center;">
       <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;
-        color:#7a9ab0;margin-bottom:8px;">Morning Prayer</div>
+        color:#7a9ab0;margin-bottom:6px;">Morning Prayer</div>
       <div style="font-size:14px;color:#4a6a8a;line-height:1.7;font-style:italic;">
         {dev.get('prayer','')}
       </div>
     </div>
 
-    {reading_block}
-
-    <!-- CTA -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <a href="{APP_URL}" target="_blank"
-        style="display:inline-block;font-size:11px;letter-spacing:2px;
-        text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
-        text-decoration:none;padding:11px 28px;border-radius:8px;">
-        Search Scripture by Mood &rarr;
-      </a>
-    </div>
-
-    <!-- Footer -->
-    <div style="text-align:center;padding-top:16px;border-top:1px solid rgba(100,160,200,.2);
+    <div style="text-align:center;padding-top:14px;border-top:1px solid rgba(100,160,200,.2);
       font-size:9px;color:#8aaabb;letter-spacing:2px;">
-      STILL WATERS &nbsp;·&nbsp; KJV &nbsp;·&nbsp; HE LEADETH ME BESIDE THE STILL WATERS
+      STILL WATERS &nbsp;·&nbsp; HE LEADETH ME BESIDE THE STILL WATERS
       <div style="margin-top:10px;">
         <a href="{unsub}" style="color:#aac0d0;">Unsubscribe</a>
       </div>
     </div>
 
-  </div><!-- /body -->
+  </div>
 
-  <!-- JStoutInc footer band -->
+  <!-- JStoutInc footer -->
   <div style="background:#1a1a1a;padding:10px 24px;border-radius:0 0 10px 10px;text-align:center;">
     <div style="font-size:9px;color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;">
       JStout Inc &nbsp;·&nbsp; Kentucky Built &amp; Based
@@ -280,7 +286,7 @@ def build_email(sub: dict, dev: dict, reading: str, day: int, total_days: int, p
 </html>"""
 
 
-# ── MAIN ────────────────────────────────────────────────────────────────────
+# ── MAIN ─────────────────────────────────────────────────────────────────────
 
 def main():
     subscribers = get_subscribers()
@@ -299,11 +305,13 @@ def main():
         for sub in subscribers:
             email    = sub["email"]
             has_plan = bool(sub.get("has_plan"))
-            reading  = ""
             day      = sub.get("current_day") or 1
             cpd      = sub.get("chapters_per_day") or 3
-            total_days  = -(-TOTAL // cpd)
+            total_days   = -(-TOTAL // cpd)
             progress_pct = min(100, round((day / total_days) * 100))
+
+            chapters    = []
+            chapter_html = ""
 
             if has_plan:
                 chapters = chapters_for_day(day, cpd)
@@ -312,11 +320,14 @@ def main():
                     has_plan = False
                     print(f"  {email} — Bible complete!")
                 else:
-                    reading = reading_label(chapters)
+                    parts = []
+                    for book, ch in chapters:
+                        parts.append(fetch_chapter_html(book, ch, sub.get("version") or "kjv"))
+                        time.sleep(0.3)
+                    chapter_html = "".join(parts)
 
-            html = build_email(sub, dev, reading, day, total_days, progress_pct)
-
-            subject = f"Still Waters — {dev.get('theme','Daily Verse')} — {today_str}"
+            html = build_email(sub, dev, chapters, day, total_days, progress_pct, chapter_html)
+            subject = f"Still Waters — {reading_label(chapters) or dev.get('theme','Daily Verse')} — {today_str}"
 
             msg = MIMEMultipart("alternative")
             msg["From"]    = f"Still Waters <{GMAIL_USER}>"
@@ -328,7 +339,8 @@ def main():
             if has_plan:
                 advance_plan(email, day + 1, (sub.get("streak") or 0) + 1)
 
-            print(f"  ✓ {email}" + (f" — {reading}" if reading else ""))
+            label = reading_label(chapters)
+            print(f"  ✓ {email}" + (f" — {label}" if label else ""))
 
     print("Done.")
 
