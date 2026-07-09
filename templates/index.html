@@ -901,29 +901,56 @@
 
 </div>
 
-<!-- ── THE DAILY SCROLL ── -->
+<!-- ── SUBSCRIBE ── -->
 <div class="features-section">
+  <div class="feature-panel">
+    <div class="sec-head">
+      <span class="sec-eyebrow">✉ Free · Every Morning · Still Waters</span>
+      <span class="sec-title">Stay in the Word</span>
+      <span class="sec-sub">Daily verse, reflection, and morning prayer straight to your inbox. Add a reading plan and we'll track your chapters too.</span>
+    </div>
 
-    <!-- THE DAILY SCROLL — full width -->
-    <div class="feature-panel">
-      <div class="sec-head">
-        <span class="sec-eyebrow">Read the Bible at Your Pace</span>
-        <span class="sec-title">The Daily Scroll</span>
-        <span class="sec-sub">Choose your daily reading time. Each evening's portion arrives straight to your inbox — the full text, ready before you rest.</span>
-      </div>
+    <!-- Email + phone -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <input id="sub-email" type="email" placeholder="your@email.com"
+        style="background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+        color:#1a2a3a;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
+        outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;"
+        onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
+        onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'"
+        onkeydown="if(event.key==='Enter')unifiedSubscribe()">
+      <input id="sub-phone" type="tel" placeholder="Phone for SMS alerts (optional)"
+        style="background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+        color:#1a2a3a;font-family:'EB Garamond',serif;font-size:15px;padding:11px 16px;
+        outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;"
+        onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
+        onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'">
+      <div style="font-size:10px;color:#aac0d0;text-align:center;">By adding your phone you consent to receive SMS. Reply STOP to opt out.</div>
+    </div>
+
+    <!-- Reading plan toggle -->
+    <button onclick="togglePlanSection()" id="plan-toggle-btn"
+      style="width:100%;background:none;border:1px dashed rgba(100,160,220,0.35);border-radius:10px;
+      padding:10px;font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:2px;
+      text-transform:uppercase;color:#5A9CBB;cursor:pointer;margin-bottom:0;transition:all 0.2s;"
+      onmouseover="this.style.background='rgba(90,156,187,0.06)'"
+      onmouseout="this.style.background='none'">
+      + Add a Reading Plan (optional)
+    </button>
+
+    <div id="plan-section" style="display:none;margin-top:16px;">
       <!-- Featured: Bible in a Year -->
       <div id="plan-1year" onclick="selectScrollPlan(15)" style="position:relative;cursor:pointer;
         background:rgba(255,255,255,0.92);border:2px solid rgba(180,140,60,0.35);border-radius:14px;
-        padding:16px 18px;margin-bottom:14px;text-align:center;transition:all 0.2s;"
+        padding:14px 18px;margin-bottom:12px;text-align:center;transition:all 0.2s;"
         onmouseover="this.style.borderColor='rgba(180,140,60,0.7)'"
         onmouseout="if(!this.classList.contains('selected'))this.style.borderColor='rgba(180,140,60,0.35)'">
-        <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);
           background:linear-gradient(135deg,#b8922a,#d4a84b);color:#fff;
           font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;
           padding:3px 14px;border-radius:20px;white-space:nowrap;">Most Popular</div>
-        <div style="font-family:'Cinzel',serif;font-size:16px;color:#7a5a1a;margin-top:4px;margin-bottom:3px;">Bible in a Year</div>
-        <div style="font-size:11px;color:#9a8050;letter-spacing:1px;margin-bottom:3px;">3 chapters · day · ~13 months</div>
-        <div style="font-style:italic;font-size:12px;color:#aaa090;">Genesis to Revelation, one chapter at a time</div>
+        <div style="font-family:'Cinzel',serif;font-size:15px;color:#7a5a1a;margin-top:4px;margin-bottom:2px;">Bible in a Year</div>
+        <div style="font-size:11px;color:#9a8050;letter-spacing:1px;">3 chapters · day · ~13 months</div>
         <div style="position:absolute;top:10px;right:12px;font-size:13px;color:#b8922a;display:none;" id="check-1year">✓</div>
       </div>
 
@@ -954,84 +981,39 @@
         </div>
       </div>
 
-      <div class="version-row" style="justify-content:center;margin-bottom:18px;">
+      <div class="version-row" style="justify-content:center;margin-bottom:4px;">
         <span class="version-label">Version</span>
-        <button class="version-btn active" data-sv="KJV"  onclick="setScrollVersion('KJV')"  title="King James Version (1611) — traditional, poetic language">KJV</button>
-        <button class="version-btn" data-sv="NIV"  onclick="setScrollVersion('NIV')"  title="New International Version — modern, readable, widely used">NIV</button>
-        <button class="version-btn" data-sv="ESV"  onclick="setScrollVersion('ESV')"  title="English Standard Version — word-for-word accuracy, modern English">ESV</button>
-        <button class="version-btn" data-sv="NLT"  onclick="setScrollVersion('NLT')"  title="New Living Translation — thought-for-thought, very easy to read">NLT</button>
-        <button class="version-btn" data-sv="NKJV" onclick="setScrollVersion('NKJV')" title="New King James Version — KJV updated for modern readers">NKJV</button>
-        <button class="version-btn" data-sv="WEB"  onclick="setScrollVersion('WEB')"  title="World English Bible — public domain, modern language">WEB</button>
+        <button class="version-btn active" data-sv="KJV"  onclick="setScrollVersion('KJV')">KJV</button>
+        <button class="version-btn" data-sv="NIV"  onclick="setScrollVersion('NIV')">NIV</button>
+        <button class="version-btn" data-sv="ESV"  onclick="setScrollVersion('ESV')">ESV</button>
+        <button class="version-btn" data-sv="NLT"  onclick="setScrollVersion('NLT')">NLT</button>
+        <button class="version-btn" data-sv="NKJV" onclick="setScrollVersion('NKJV')">NKJV</button>
+        <button class="version-btn" data-sv="WEB"  onclick="setScrollVersion('WEB')">WEB</button>
       </div>
+    </div>
 
-      <div style="display:flex;flex-wrap:wrap;gap:10px;">
-        <input id="scroll-email" type="email" placeholder="your@email.com"
-          style="flex:1;min-width:0;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);
-          border-radius:10px;color:#1a2a3a;font-family:'EB Garamond',serif;font-size:15px;padding:11px 14px;
-          outline:none;transition:border-color 0.2s;"
-          onfocus="this.style.borderColor='#7AABCC'" onblur="this.style.borderColor='rgba(100,160,220,0.3)'"
-          onkeydown="if(event.key==='Enter')subscribeScroll()">
-        <button onclick="subscribeScroll()"
-          style="font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:2px;
-          text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
-          border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap;
-          box-shadow:0 4px 14px rgba(58,122,154,0.25);">
-          Begin My Journey
-        </button>
-      </div>
-      <div id="scroll-msg" style="margin-top:14px;font-style:italic;font-size:13px;display:none;text-align:center;"></div>
-      <div style="font-size:11px;color:#aac0d0;text-align:center;margin-top:14px;font-style:italic;line-height:1.6;">
-        The Word will find you each evening — Genesis to Revelation, at your own pace.
-      </div>
-      <div style="text-align:center;margin-top:16px;">
-        <a href="/read" style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;
-          letter-spacing:2px;text-transform:uppercase;color:#5A9CBB;text-decoration:none;
-          border:1px solid rgba(90,156,187,0.3);border-radius:20px;padding:8px 22px;
-          display:inline-block;transition:all 0.2s;"
-          onmouseover="this.style.background='rgba(90,156,187,0.1)'"
-          onmouseout="this.style.background='transparent'">
-          📖 Read the Bible Now →
-        </a>
-      </div>
-    </div>
-</div>
+    <!-- Submit -->
+    <button onclick="unifiedSubscribe()"
+      style="width:100%;margin-top:18px;font-family:'Cinzel',serif;font-size:12px;font-weight:600;
+      letter-spacing:3px;text-transform:uppercase;color:#fff;
+      background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
+      border:none;border-radius:10px;padding:14px;cursor:pointer;
+      box-shadow:0 4px 18px rgba(58,122,154,0.28);">
+      Subscribe Free
+    </button>
 
-<!-- ── DAILY VERSE BY EMAIL ── -->
-<div style="max-width:780px;margin:0 auto;padding:0 24px 20px;">
-  <div style="background:rgba(255,255,255,0.82);border:1px solid rgba(100,160,220,0.25);
-    border-top:3px solid #7AABCC;border-radius:16px;padding:36px 40px;text-align:center;
-    box-shadow:0 8px 32px rgba(60,100,160,0.1);backdrop-filter:blur(8px);">
-    <div class="sec-head" style="margin-bottom:20px;">
-      <span class="sec-eyebrow">✉ Free · Every Morning at 8 a.m.</span>
-      <span class="sec-title">Daily Verse by Email</span>
-      <span class="sec-sub">A verse, reflection, and morning prayer — delivered each day.</span>
+    <div id="sub-msg" style="margin-top:16px;font-style:italic;font-size:14px;display:none;text-align:center;"></div>
+
+    <div style="text-align:center;margin-top:18px;">
+      <a href="/read" style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;
+        letter-spacing:2px;text-transform:uppercase;color:#5A9CBB;text-decoration:none;
+        border:1px solid rgba(90,156,187,0.3);border-radius:20px;padding:8px 22px;
+        display:inline-block;transition:all 0.2s;"
+        onmouseover="this.style.background='rgba(90,156,187,0.1)'"
+        onmouseout="this.style.background='transparent'">
+        📖 Read the Bible Now →
+      </a>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
-      <div style="display:flex;flex-wrap:wrap;gap:10px;">
-        <input id="sub-email" type="email" placeholder="your@email.com"
-          style="flex:1;min-width:0;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
-          color:#1a2a3a;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
-          outline:none;transition:border-color 0.2s,box-shadow 0.2s;"
-          onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
-          onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'"
-          onkeydown="if(event.key==='Enter')subscribe()">
-        <button onclick="subscribe()"
-          style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;
-          text-transform:uppercase;color:#ffffff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
-          border:none;border-radius:10px;padding:12px 22px;cursor:pointer;white-space:nowrap;flex-shrink:0;
-          box-shadow:0 4px 14px rgba(58,122,154,0.25);">
-          Subscribe
-        </button>
-      </div>
-      <input id="sub-phone" type="tel" placeholder="Phone for SMS alerts (optional)"
-        style="background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
-        color:#1a2a3a;font-family:'EB Garamond',serif;font-size:15px;padding:10px 16px;
-        outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;"
-        onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
-        onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'">
-      <div style="font-size:10px;color:#aaa;text-align:center;">By adding your phone you consent to receive SMS. Reply STOP to unsubscribe.</div>
-    </div>
-    <div id="sub-msg" style="margin-top:16px;font-style:italic;font-size:14px;display:none;"></div>
   </div>
 </div>
 
@@ -1445,70 +1427,56 @@
     document.querySelectorAll('[data-sv]').forEach(b => b.classList.toggle('active', b.dataset.sv === v));
   }
 
-  async function subscribeScroll() {
-    const email = document.getElementById('scroll-email').value.trim();
-    const msg = document.getElementById('scroll-msg');
-    if (!scrollPlan) {
-      msg.style.display = 'block'; msg.style.color = '#aa4060';
-      msg.textContent = 'Please choose a reading plan above.'; return;
-    }
-    if (!email) { document.getElementById('scroll-email').focus(); return; }
+  function togglePlanSection() {
+    const sec = document.getElementById('plan-section');
+    const btn = document.getElementById('plan-toggle-btn');
+    const open = sec.style.display === 'none';
+    sec.style.display = open ? 'block' : 'none';
+    btn.textContent   = open ? '− Hide Reading Plan' : '+ Add a Reading Plan (optional)';
+  }
+
+  async function unifiedSubscribe() {
+    const email = document.getElementById('sub-email').value.trim();
+    const phone = (document.getElementById('sub-phone').value || '').trim();
+    const msg   = document.getElementById('sub-msg');
+    if (!email) { document.getElementById('sub-email').focus(); return; }
     msg.style.display = 'none';
+
     try {
-      const resp = await fetch('/reading-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, minutes_per_day: scrollPlan, version: scrollVer }),
+      // 1. Always subscribe to daily email
+      const r1 = await fetch('/subscribe', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, phone }),
       });
-      const data = await resp.json();
-      msg.style.display = 'block';
-      if (data.status === 'created' || data.status === 'updated') {
-        document.getElementById('scroll-email').value = '';
-        const totalDays = { 5: 1189, 10: 595, 15: 397, 30: 238 }[scrollPlan];
-        const cpd      = { 5: 1,    10: 2,   15: 3,   30: 5   }[scrollPlan];
-        const pct = Math.max((1 / totalDays) * 100, 0.4).toFixed(2);
-        const label = data.status === 'updated' ? 'Journey reset — fresh start from Genesis.' : 'Your scroll has begun.';
-        msg.style.color = '';
-        msg.innerHTML = `
-          <div style="background:rgba(255,255,255,0.92);border:1px solid rgba(100,160,220,0.25);
-            border-left:4px solid #5A9CBB;border-radius:12px;padding:18px 20px;text-align:left;">
-            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#5A9CBB;
-              text-transform:uppercase;margin-bottom:10px;">${label}</div>
-            <div style="font-family:'Cinzel',serif;font-size:13px;color:#2a4a6a;margin-bottom:12px;">
-              Day 1 &nbsp;of&nbsp; ${totalDays.toLocaleString()}
-            </div>
-            <!-- Track -->
-            <div style="position:relative;background:rgba(100,160,220,0.12);border-radius:6px;
-              height:10px;overflow:hidden;margin-bottom:6px;">
-              <!-- OT/NT divider at 78% -->
-              <div style="position:absolute;left:78.1%;top:0;bottom:0;width:1px;
-                background:rgba(122,171,204,0.5);z-index:1;"></div>
-              <!-- Fill -->
-              <div style="background:linear-gradient(90deg,#7AABCC,#5A9CBB);height:10px;
-                width:${pct}%;border-radius:6px;min-width:5px;
-                box-shadow:0 0 6px rgba(90,156,187,0.5);"></div>
-            </div>
-            <!-- Track labels -->
-            <div style="display:flex;justify-content:space-between;font-size:9px;
-              color:#aac0d0;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">
-              <span>Genesis</span>
-              <span>OT &nbsp;|&nbsp; NT</span>
-              <span>Revelation</span>
-            </div>
-            <div style="font-size:12px;color:#4a6a8a;margin-bottom:6px;">
-              First reading tonight: <span style="color:#3a6a8a;font-weight:600;font-style:italic;">Genesis 1</span>
-            </div>
-            <div style="font-size:10px;color:#aac0d0;letter-spacing:1px;text-transform:uppercase;">
-              ${scrollPlan} min / day &nbsp;·&nbsp; ${cpd} chapter${cpd > 1 ? 's' : ''} / day &nbsp;·&nbsp; ${scrollVer}
-            </div>
-          </div>`;
-      } else {
-        msg.style.color = '#aa4060';
-        msg.textContent = data.error || 'Something went wrong. Please try again.';
+      const d1 = await r1.json();
+      if (d1.error) throw new Error(d1.error);
+
+      // 2. If a reading plan is selected, enroll
+      if (scrollPlan) {
+        await fetch('/reading-plan', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email, minutes_per_day: scrollPlan, version: scrollVer }),
+        });
       }
-    } catch {
+
+      // Clear fields
+      document.getElementById('sub-email').value = '';
+      document.getElementById('sub-phone').value = '';
+
+      msg.style.display = 'block';
+      msg.style.color   = '#3a7a9a';
+      if (d1.status === 'already_subscribed') {
+        msg.textContent = scrollPlan
+          ? 'Reading plan updated. Your daily email continues each morning.'
+          : 'Already subscribed — your morning verse keeps coming.';
+      } else {
+        msg.textContent = scrollPlan
+          ? `You're in. Daily verse every morning + ${scrollPlan}-min reading plan starting tonight.`
+          : 'You\'re in. Your first verse arrives tomorrow morning.';
+      }
+    } catch(e) {
       msg.style.display = 'block'; msg.style.color = '#aa4060';
-      msg.textContent = 'Could not connect. Please try again.';
+      msg.textContent = e.message || 'Could not connect. Please try again.';
     }
   }
 
@@ -1525,37 +1493,6 @@
     }
   });
 
-  async function subscribe() {
-    const email = document.getElementById('sub-email').value.trim();
-    const phone = (document.getElementById('sub-phone') || {value:''}).value.trim();
-    const msg = document.getElementById('sub-msg');
-    if (!email) { document.getElementById('sub-email').focus(); return; }
-    msg.style.display = 'none';
-    try {
-      const resp = await fetch('/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, phone }),
-      });
-      const data = await resp.json();
-      msg.style.display = 'block';
-      if (data.status === 'subscribed') {
-        msg.style.color = '#3a7a9a';
-        msg.textContent = 'You are subscribed. Your first verse arrives tomorrow at 8 a.m.';
-        document.getElementById('sub-email').value = '';
-      } else if (data.status === 'already_subscribed') {
-        msg.style.color = '#7a9ab0';
-        msg.textContent = 'That email is already subscribed.';
-      } else {
-        msg.style.color = '#aa4060';
-        msg.textContent = data.error || 'Something went wrong. Please try again.';
-      }
-    } catch {
-      msg.style.display = 'block';
-      msg.style.color = '#aa4060';
-      msg.textContent = 'Could not connect. Please try again.';
-    }
-  }
 </script>
 
 <script>

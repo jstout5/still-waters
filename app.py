@@ -387,6 +387,10 @@ def create_reading_plan():
         return jsonify({"error": "Database not configured."}), 500
     with _db() as conn:
         with conn.cursor() as cur:
+            # Ensure they're on the main subscriber list so they get daily emails
+            cur.execute("""INSERT INTO subscribers (email, source)
+                VALUES (%s, 'bible')
+                ON CONFLICT (email) DO NOTHING""", (email,))
             cur.execute("""INSERT INTO reading_plans (email, minutes_per_day, chapters_per_day, version, current_day, streak, active, updated_at)
                 VALUES (%s, %s, %s, %s, 1, 0, TRUE, NOW())
                 ON CONFLICT (email) DO UPDATE SET
