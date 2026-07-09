@@ -17,66 +17,31 @@ from dotenv import load_dotenv
 _cache = {}   # {hash: full_response_text}
 CACHE_MAX = 200  # keep last 200 unique searches
 
-SUBSCRIBERS_FILE = Path(__file__).parent / "subscribers.json"
-PRAYERS_FILE    = Path(__file__).parent / "prayers.json"
-VOTD_FILE       = Path(__file__).parent / ".tmp" / "verse_of_day.json"
-SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
-
-
-def _sb_headers():
-    return {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
-            "Content-Type": "application/json", "Prefer": "return=minimal"}
-
-
-def _sb_available():
-    return bool(SUPABASE_URL and SUPABASE_KEY)
+SUBSCRIBERS_FILE   = Path(__file__).parent / "subscribers.json"
+PRAYERS_FILE       = Path(__file__).parent / "prayers.json"
+VOTD_FILE          = Path(__file__).parent / ".tmp" / "verse_of_day.json"
 
 
 def load_subscribers() -> list:
-    if _sb_available():
-        try:
-            import requests as req
-            r = req.get(f"{SUPABASE_URL}/rest/v1/subscribers?select=email",
-                        headers=_sb_headers(), timeout=8)
-            if r.status_code == 200:
-                return [row["email"] for row in r.json()]
-        except Exception:
-            pass
     if SUBSCRIBERS_FILE.exists():
-        return json.loads(SUBSCRIBERS_FILE.read_text(encoding="utf-8")).get("subscribers", [])
+        raw = json.loads(SUBSCRIBERS_FILE.read_text(encoding="utf-8")).get("subscribers", [])
+        # normalize: old format was list of strings
+        return [s if isinstance(s, dict) else {"email": s, "phone": ""} for s in raw]
     return []
 
 
-def sb_add_subscriber(email: str) -> str:
-    """Returns 'subscribed', 'already_subscribed', or raises."""
-    if _sb_available():
-        import requests as req
-        r = req.post(f"{SUPABASE_URL}/rest/v1/subscribers",
-                     headers={**_sb_headers(), "Prefer": "return=minimal"},
-                     json={"email": email}, timeout=8)
-        if r.status_code in (200, 201):
-            return "subscribed"
-        if r.status_code == 409:
-            return "already_subscribed"
-        r.raise_for_status()
-    # fallback to local file
+def sb_add_subscriber(email: str, phone: str = "") -> str:
     subs = load_subscribers()
-    if email in subs:
+    if any(s["email"] == email for s in subs):
         return "already_subscribed"
-    subs.append(email)
+    subs.append({"email": email, "phone": phone})
     SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
     return "subscribed"
 
 
 def sb_remove_subscriber(email: str):
-    if _sb_available():
-        import requests as req
-        req.delete(f"{SUPABASE_URL}/rest/v1/subscribers?email=eq.{email}",
-                   headers=_sb_headers(), timeout=8)
-    else:
-        subs = [s for s in load_subscribers() if s != email]
-        SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
+    subs = [s for s in load_subscribers() if s["email"] != email]
+    SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
 
 
 def save_subscribers(subs: list):
@@ -107,33 +72,12 @@ CHAPTERS_PER_DAY_MAP = {5: 1, 10: 2, 15: 3, 30: 5}
 
 
 def load_reading_plans() -> list:
-    if _sb_available():
-        try:
-            import requests as req
-            r = req.get(f"{SUPABASE_URL}/rest/v1/reading_plans?select=*",
-                        headers=_sb_headers(), timeout=8)
-            if r.status_code == 200:
-                return r.json()
-        except Exception:
-            pass
     if READING_PLANS_FILE.exists():
         return json.loads(READING_PLANS_FILE.read_text(encoding="utf-8")).get("plans", [])
     return []
 
 
 def save_reading_plans(plans: list):
-    if _sb_available():
-        try:
-            import requests as req
-            for plan in plans:
-                req.post(
-                    f"{SUPABASE_URL}/rest/v1/reading_plans",
-                    headers={**_sb_headers(), "Prefer": "resolution=merge-duplicates"},
-                    json=plan, timeout=8,
-                )
-            return
-        except Exception:
-            pass
     READING_PLANS_FILE.write_text(json.dumps({"plans": plans}, indent=2), encoding="utf-8")
 
 
@@ -356,10 +300,19 @@ def search():
 def subscribe():
     data = request.get_json()
     email = (data.get("email", "") or "").strip().lower()
+    phone = (data.get("phone", "") or "").strip()
     if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
         return jsonify({"error": "Please enter a valid email address."}), 400
+    # normalize phone: digits only, prepend +1 if 10 digits
+    phone_digits = re.sub(r"\D", "", phone)
+    if phone_digits and len(phone_digits) == 10:
+        phone = "+1" + phone_digits
+    elif phone_digits and len(phone_digits) == 11 and phone_digits.startswith("1"):
+        phone = "+" + phone_digits
+    else:
+        phone = ""
     try:
-        status = sb_add_subscriber(email)
+        status = sb_add_subscriber(email, phone)
         return jsonify({"status": status})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

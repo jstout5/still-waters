@@ -230,14 +230,6 @@
     background: var(--header-bg);
     backdrop-filter: blur(4px);
   }
-  .header::before, .header::after {
-    content: '✿';
-    position: absolute;
-    top: 50%; transform: translateY(-50%);
-    font-size: 20px; color: rgba(100,150,200,0.5);
-  }
-  .header::before { left: 40px; }
-  .header::after  { right: 40px; }
 
   .ornament { font-size: 24px; color: #7AABCC; letter-spacing: 10px; margin-bottom: 12px; }
   h1 {
@@ -367,7 +359,7 @@
     color: rgba(100,160,200,0.5);
     font-size: 16px;
     letter-spacing: 14px;
-    margin: 36px 0;
+    margin: 18px 0;
   }
 
   /* ── SECTION HEADER — consistent across all sections ── */
@@ -828,14 +820,14 @@
 
 <!-- ── VERSE OF THE DAY ── -->
 <div class="votd-section" id="votd-section">
-  <div class="votd-eyebrow">✦ &nbsp; Verse of the Day &nbsp; ✦</div>
+  <div class="votd-eyebrow">Verse of the Day</div>
   <div id="votd-theme" class="votd-theme">Loading…</div>
   <div id="votd-verse" class="votd-verse" style="opacity:0;transition:opacity 0.8s;"></div>
   <div id="votd-ref"   class="votd-ref"   style="opacity:0;transition:opacity 0.8s 0.2s;"></div>
 </div>
 
 <div class="header">
-  <div class="ornament">✾ ❀ ✾</div>
+
   <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:#7a9ab0;text-transform:uppercase;margin-bottom:6px;">Still Waters</div>
   <h1>Still Waters</h1>
   <div class="tagline">Thy word is a lamp unto my feet, and a light unto my path — Psalm 119:105</div>
@@ -869,20 +861,18 @@
 
     <div class="version-row">
       <span class="version-label">Version</span>
-      <button class="version-btn active" data-version="KJV"  onclick="setVersion('KJV')">KJV</button>
-      <button class="version-btn" data-version="NIV"  onclick="setVersion('NIV')">NIV</button>
-      <button class="version-btn" data-version="ESV"  onclick="setVersion('ESV')">ESV</button>
-      <button class="version-btn" data-version="NLT"  onclick="setVersion('NLT')">NLT</button>
-      <button class="version-btn" data-version="NKJV" onclick="setVersion('NKJV')">NKJV</button>
-      <button class="version-btn" data-version="WEB"  onclick="setVersion('WEB')">WEB</button>
+      <button class="version-btn active" data-version="KJV"  onclick="setVersion('KJV')"  title="King James Version (1611) — traditional, poetic language">KJV</button>
+      <button class="version-btn" data-version="NIV"  onclick="setVersion('NIV')"  title="New International Version — modern, readable, widely used">NIV</button>
+      <button class="version-btn" data-version="ESV"  onclick="setVersion('ESV')"  title="English Standard Version — word-for-word accuracy, modern English">ESV</button>
+      <button class="version-btn" data-version="NLT"  onclick="setVersion('NLT')"  title="New Living Translation — thought-for-thought, very easy to read">NLT</button>
+      <button class="version-btn" data-version="NKJV" onclick="setVersion('NKJV')" title="New King James Version — KJV updated for modern readers">NKJV</button>
+      <button class="version-btn" data-version="WEB"  onclick="setVersion('WEB')"  title="World English Bible — public domain, modern language">WEB</button>
     </div>
 
     <button class="seek-btn" onclick="seekScripture()">
       Seek the Word
     </button>
   </div>
-
-  <div class="divider">✿ ✿ ✿</div>
 
   <div class="loading" id="loading">
     <div class="parting-scene">
@@ -913,19 +903,14 @@
 
 <!-- ── THE DAILY SCROLL ── -->
 <div class="features-section">
-  <div class="divider">✿ ✿ ✿</div>
 
     <!-- THE DAILY SCROLL — full width -->
     <div class="feature-panel">
       <div class="sec-head">
-        <span class="sec-eyebrow">✦ Read the Bible at Your Pace ✦</span>
+        <span class="sec-eyebrow">Read the Bible at Your Pace</span>
         <span class="sec-title">The Daily Scroll</span>
         <span class="sec-sub">Choose your daily reading time. Each evening's portion arrives straight to your inbox — the full text, ready before you rest.</span>
       </div>
-      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:#0a2040;
-        text-transform:uppercase;text-align:center;margin-bottom:8px;">Read the Bible at Your Pace</div>
-      <div class="feature-sub">Choose your daily reading time. Each evening's portion arrives straight to your inbox — the full text, ready before you rest.</div>
-
       <!-- Featured: Bible in a Year -->
       <div id="plan-1year" onclick="selectScrollPlan(15)" style="position:relative;cursor:pointer;
         background:rgba(255,255,255,0.92);border:2px solid rgba(180,140,60,0.35);border-radius:14px;
@@ -935,7 +920,7 @@
         <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);
           background:linear-gradient(135deg,#b8922a,#d4a84b);color:#fff;
           font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;
-          padding:3px 14px;border-radius:20px;white-space:nowrap;">✦ Most Popular</div>
+          padding:3px 14px;border-radius:20px;white-space:nowrap;">Most Popular</div>
         <div style="font-family:'Cinzel',serif;font-size:16px;color:#7a5a1a;margin-top:4px;margin-bottom:3px;">Bible in a Year</div>
         <div style="font-size:11px;color:#9a8050;letter-spacing:1px;margin-bottom:3px;">3 chapters · day · ~13 months</div>
         <div style="font-style:italic;font-size:12px;color:#aaa090;">Genesis to Revelation, one chapter at a time</div>
@@ -971,12 +956,12 @@
 
       <div class="version-row" style="justify-content:center;margin-bottom:18px;">
         <span class="version-label">Version</span>
-        <button class="version-btn active" data-sv="KJV"  onclick="setScrollVersion('KJV')">KJV</button>
-        <button class="version-btn" data-sv="NIV"  onclick="setScrollVersion('NIV')">NIV</button>
-        <button class="version-btn" data-sv="ESV"  onclick="setScrollVersion('ESV')">ESV</button>
-        <button class="version-btn" data-sv="NLT"  onclick="setScrollVersion('NLT')">NLT</button>
-        <button class="version-btn" data-sv="NKJV" onclick="setScrollVersion('NKJV')">NKJV</button>
-        <button class="version-btn" data-sv="WEB"  onclick="setScrollVersion('WEB')">WEB</button>
+        <button class="version-btn active" data-sv="KJV"  onclick="setScrollVersion('KJV')"  title="King James Version (1611) — traditional, poetic language">KJV</button>
+        <button class="version-btn" data-sv="NIV"  onclick="setScrollVersion('NIV')"  title="New International Version — modern, readable, widely used">NIV</button>
+        <button class="version-btn" data-sv="ESV"  onclick="setScrollVersion('ESV')"  title="English Standard Version — word-for-word accuracy, modern English">ESV</button>
+        <button class="version-btn" data-sv="NLT"  onclick="setScrollVersion('NLT')"  title="New Living Translation — thought-for-thought, very easy to read">NLT</button>
+        <button class="version-btn" data-sv="NKJV" onclick="setScrollVersion('NKJV')" title="New King James Version — KJV updated for modern readers">NKJV</button>
+        <button class="version-btn" data-sv="WEB"  onclick="setScrollVersion('WEB')"  title="World English Bible — public domain, modern language">WEB</button>
       </div>
 
       <div style="display:flex;flex-wrap:wrap;gap:10px;">
@@ -1021,21 +1006,30 @@
       <span class="sec-title">Daily Verse by Email</span>
       <span class="sec-sub">A verse, reflection, and morning prayer — delivered each day.</span>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
-      <input id="sub-email" type="email" placeholder="your@email.com"
-        style="flex:1;min-width:0;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
-        color:#1a2a3a;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
-        outline:none;transition:border-color 0.2s,box-shadow 0.2s;"
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:420px;margin:0 auto;" id="subscribe-form">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <input id="sub-email" type="email" placeholder="your@email.com"
+          style="flex:1;min-width:0;background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+          color:#1a2a3a;font-family:'EB Garamond',serif;font-size:16px;padding:12px 16px;
+          outline:none;transition:border-color 0.2s,box-shadow 0.2s;"
+          onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
+          onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'"
+          onkeydown="if(event.key==='Enter')subscribe()">
+        <button onclick="subscribe()"
+          style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;
+          text-transform:uppercase;color:#ffffff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
+          border:none;border-radius:10px;padding:12px 22px;cursor:pointer;white-space:nowrap;flex-shrink:0;
+          box-shadow:0 4px 14px rgba(58,122,154,0.25);">
+          Subscribe
+        </button>
+      </div>
+      <input id="sub-phone" type="tel" placeholder="Phone for SMS alerts (optional)"
+        style="background:rgba(255,255,255,0.9);border:1px solid rgba(100,160,220,0.3);border-radius:10px;
+        color:#1a2a3a;font-family:'EB Garamond',serif;font-size:15px;padding:10px 16px;
+        outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;"
         onfocus="this.style.borderColor='#7AABCC';this.style.boxShadow='0 0 0 3px rgba(122,171,204,0.15)'"
-        onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'"
-        onkeydown="if(event.key==='Enter')subscribe()">
-      <button onclick="subscribe()"
-        style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;
-        text-transform:uppercase;color:#ffffff;background:linear-gradient(135deg,#5A9CBB,#3A7A9A);
-        border:none;border-radius:10px;padding:12px 22px;cursor:pointer;white-space:nowrap;flex-shrink:0;
-        box-shadow:0 4px 14px rgba(58,122,154,0.25);">
-        Subscribe
-      </button>
+        onblur="this.style.borderColor='rgba(100,160,220,0.3)';this.style.boxShadow='none'">
+      <div style="font-size:10px;color:#aaa;text-align:center;">By adding your phone you consent to receive SMS. Reply STOP to unsubscribe.</div>
     </div>
     <div id="sub-msg" style="margin-top:16px;font-style:italic;font-size:14px;display:none;"></div>
   </div>
@@ -1043,7 +1037,6 @@
 
 <!-- ── PRAYER WALL ── -->
 <div class="prayer-wall" id="prayer-wall">
-  <div class="divider">✿ ✿ ✿</div>
   <div class="prayer-input-card">
     <div class="sec-head" style="margin-bottom:20px;">
       <span class="sec-eyebrow">🙏 Community</span>
@@ -1111,7 +1104,7 @@
 </div>
 
 <div class="footer">
-  Still Waters &nbsp;✿&nbsp; KJV · NIV · ESV · NLT · NKJV · WEB &nbsp;✿&nbsp;
+  Still Waters &nbsp;·&nbsp; KJV · NIV · ESV · NLT · NKJV · WEB &nbsp;·&nbsp;
   <a href="/read" style="color:#7AABCC;text-decoration:none;font-family:'Cinzel',serif;letter-spacing:2px;">Read the Bible →</a>
 </div>
 
@@ -1479,7 +1472,7 @@
           <div style="background:rgba(255,255,255,0.92);border:1px solid rgba(100,160,220,0.25);
             border-left:4px solid #5A9CBB;border-radius:12px;padding:18px 20px;text-align:left;">
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#5A9CBB;
-              text-transform:uppercase;margin-bottom:10px;">✦ &nbsp;${label}</div>
+              text-transform:uppercase;margin-bottom:10px;">${label}</div>
             <div style="font-family:'Cinzel',serif;font-size:13px;color:#2a4a6a;margin-bottom:12px;">
               Day 1 &nbsp;of&nbsp; ${totalDays.toLocaleString()}
             </div>
@@ -1533,6 +1526,7 @@
 
   async function subscribe() {
     const email = document.getElementById('sub-email').value.trim();
+    const phone = (document.getElementById('sub-phone') || {value:''}).value.trim();
     const msg = document.getElementById('sub-msg');
     if (!email) { document.getElementById('sub-email').focus(); return; }
     msg.style.display = 'none';
@@ -1540,13 +1534,13 @@
       const resp = await fetch('/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, phone }),
       });
       const data = await resp.json();
       msg.style.display = 'block';
       if (data.status === 'subscribed') {
         msg.style.color = '#3a7a9a';
-        msg.textContent = '✿ You are subscribed. Your first verse arrives tomorrow at 8 a.m.';
+        msg.textContent = 'You are subscribed. Your first verse arrives tomorrow at 8 a.m.';
         document.getElementById('sub-email').value = '';
       } else if (data.status === 'already_subscribed') {
         msg.style.color = '#7a9ab0';
@@ -1633,7 +1627,7 @@
     const data = await resp.json();
     if (data.status === 'added') {
       msg.style.display = 'block';
-      msg.textContent = '✦ Your prayer has been received. You are not alone.';
+      msg.textContent = 'Your prayer has been received. You are not alone.';
       document.getElementById('prayer-name').value = '';
       document.getElementById('prayer-request').value = '';
       loadPrayers();
