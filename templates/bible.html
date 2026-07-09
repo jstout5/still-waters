@@ -195,8 +195,16 @@
 
   <!-- SIDEBAR: Book list -->
   <div class="sidebar" id="sidebar">
+    <div id="continue-section" style="display:none;padding:12px 14px 8px;">
+      <div style="font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:8px;">Continue Reading</div>
+      <button id="continue-btn" onclick="resumeReading()"
+        style="width:100%;background:rgba(90,156,187,0.12);border:1px solid rgba(90,156,187,0.3);
+        border-radius:8px;padding:9px 12px;font-family:'EB Garamond',serif;font-size:15px;
+        color:var(--blue);cursor:pointer;text-align:left;transition:all 0.15s;">
+      </button>
+      <div style="height:1px;background:var(--border);margin:10px 0;"></div>
+    </div>
     <div class="sidebar-section">Old Testament</div>
-    <!-- Books injected by JS -->
     <div id="ot-list"></div>
     <div class="sidebar-section" style="margin-top:10px;">New Testament</div>
     <div id="nt-list"></div>
@@ -210,13 +218,10 @@
       <button class="v-btn" data-v="web" onclick="setV('web',this)" title="World English Bible — A modern public domain translation in clear, contemporary English.">WEB</button>
     </div>
 
-    <div id="reading-heading" class="reading-heading">Choose a book to begin</div>
+    <div id="reading-heading" class="reading-heading">Genesis 1</div>
     <div class="chapter-bar" id="chapter-bar"></div>
     <div id="verse-text" class="verse-container">
-      <div class="loading-txt">
-        Select a book from the sidebar to start reading.<br><br>
-        <em>"Thy word is a lamp unto my feet, and a light unto my path." — Psalm 119:105</em>
-      </div>
+      <div class="loading-txt">Loading…</div>
     </div>
 
     <div class="ch-nav" id="ch-nav" style="display:none;">
@@ -257,6 +262,34 @@ const CHAPTERS = {
 
 let currentBook = null, currentChapter = 1, currentVersion = 'kjv';
 
+function saveProgress() {
+  localStorage.setItem('sw-book', currentBook);
+  localStorage.setItem('sw-ch',   currentChapter);
+  localStorage.setItem('sw-ver',  currentVersion);
+}
+
+function loadProgress() {
+  return {
+    book:    localStorage.getItem('sw-book') || 'Genesis',
+    chapter: parseInt(localStorage.getItem('sw-ch') || '1'),
+    version: localStorage.getItem('sw-ver') || 'kjv',
+  };
+}
+
+function updateContinueBtn(book, chapter) {
+  const sec = document.getElementById('continue-section');
+  const btn = document.getElementById('continue-btn');
+  if (book && book !== 'Genesis' || chapter > 1) {
+    sec.style.display = 'block';
+    btn.textContent   = `${book} ${chapter} →`;
+  }
+}
+
+function resumeReading() {
+  const p = loadProgress();
+  jumpTo(p.book, p.chapter, p.version);
+}
+
 // Build sidebar
 function buildSidebar() {
   ['ot','nt'].forEach(which => {
@@ -266,6 +299,24 @@ function buildSidebar() {
       `<button class="book-btn" onclick="selectBook('${b.replace(/'/g,"\\'")}',this)">${b}</button>`
     ).join('');
   });
+}
+
+function highlightSidebarBook(book) {
+  document.querySelectorAll('.book-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === book);
+  });
+}
+
+function jumpTo(book, chapter, version) {
+  version = version || currentVersion;
+  currentBook    = book;
+  currentChapter = chapter;
+  currentVersion = version;
+  document.querySelectorAll('.v-btn').forEach(b => b.classList.toggle('active', b.dataset.v === version));
+  highlightSidebarBook(book);
+  buildChapterBar(book);
+  document.querySelectorAll('.ch-btn').forEach((b,i) => b.classList.toggle('active', i+1===chapter));
+  loadChapter(book, chapter);
 }
 
 function selectBook(book, btn) {
@@ -322,6 +373,8 @@ async function loadChapter(book, chapter) {
     el.innerHTML = verses.map(v =>
       `<span class="verse-line"><sup class="verse-num">${v.verse}</sup>${v.text.trim()} </span>`
     ).join('');
+    saveProgress();
+    updateContinueBtn(currentBook, currentChapter);
   } catch(e) {
     el.innerHTML = `<div class="loading-txt">Could not load ${book} ${chapter}. Check your connection and try again.</div>`;
   }
@@ -354,6 +407,16 @@ if (localStorage.getItem('sw-dark')) {
 }
 
 buildSidebar();
+
+// Auto-start from saved progress or Genesis 1
+(function() {
+  const p = loadProgress();
+  jumpTo(p.book, p.chapter, p.version);
+  // show continue button only if not at the very start
+  if (p.book !== 'Genesis' || p.chapter > 1) {
+    updateContinueBtn(p.book, p.chapter);
+  }
+})();
 </script>
 </body>
 </html>
