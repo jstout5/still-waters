@@ -17,35 +17,65 @@ from dotenv import load_dotenv
 _cache = {}   # {hash: full_response_text}
 CACHE_MAX = 200  # keep last 200 unique searches
 
-SUBSCRIBERS_FILE   = Path(__file__).parent / "subscribers.json"
 PRAYERS_FILE       = Path(__file__).parent / "prayers.json"
 VOTD_FILE          = Path(__file__).parent / ".tmp" / "verse_of_day.json"
 
+import psycopg2, psycopg2.extras
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+def _db():
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
+
+def _init_subscribers():
+    if not DATABASE_URL:
+        return
+    with _db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""CREATE TABLE IF NOT EXISTS subscribers (
+                id         SERIAL PRIMARY KEY,
+                email      TEXT UNIQUE NOT NULL,
+                phone      TEXT,
+                source     TEXT DEFAULT 'bible',
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            )""")
+        conn.commit()
+
+_init_subscribers()
 
 def load_subscribers() -> list:
-    if SUBSCRIBERS_FILE.exists():
-        raw = json.loads(SUBSCRIBERS_FILE.read_text(encoding="utf-8")).get("subscribers", [])
-        # normalize: old format was list of strings
-        return [s if isinstance(s, dict) else {"email": s, "phone": ""} for s in raw]
-    return []
+    if not DATABASE_URL:
+        return []
+    with _db() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT email, phone FROM subscribers ORDER BY created_at DESC")
+            return [dict(r) for r in cur.fetchall()]
 
 
 def sb_add_subscriber(email: str, phone: str = "") -> str:
-    subs = load_subscribers()
-    if any(s["email"] == email for s in subs):
-        return "already_subscribed"
-    subs.append({"email": email, "phone": phone})
-    SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
+    if not DATABASE_URL:
+        return "error"
+    with _db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id FROM subscribers WHERE email=%s", (email,))
+            if cur.fetchone():
+                return "already_subscribed"
+            cur.execute("INSERT INTO subscribers (email, phone, source) VALUES (%s, %s, 'bible')",
+                        (email, phone or None))
+        conn.commit()
     return "subscribed"
 
 
 def sb_remove_subscriber(email: str):
-    subs = [s for s in load_subscribers() if s["email"] != email]
-    SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
+    if not DATABASE_URL:
+        return
+    with _db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM subscribers WHERE email=%s", (email,))
+        conn.commit()
 
 
 def save_subscribers(subs: list):
-    SUBSCRIBERS_FILE.write_text(json.dumps({"subscribers": subs}, indent=2), encoding="utf-8")
+    pass  # no-op — Neon is source of truth
 
 
 READING_PLANS_FILE = Path(__file__).parent / "reading_plans.json"
