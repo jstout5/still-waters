@@ -38,6 +38,18 @@ def _init_subscribers():
                 source     TEXT DEFAULT 'bible',
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )""")
+            cur.execute("""CREATE TABLE IF NOT EXISTS reading_plans (
+                id              SERIAL PRIMARY KEY,
+                email           TEXT UNIQUE NOT NULL,
+                minutes_per_day INTEGER DEFAULT 15,
+                chapters_per_day INTEGER DEFAULT 3,
+                version         TEXT DEFAULT 'KJV',
+                current_day     INTEGER DEFAULT 1,
+                streak          INTEGER DEFAULT 0,
+                start_date      DATE DEFAULT CURRENT_DATE,
+                active          BOOLEAN DEFAULT TRUE,
+                updated_at      TIMESTAMPTZ DEFAULT NOW()
+            )""")
         conn.commit()
 
 _init_subscribers()
@@ -102,13 +114,16 @@ CHAPTERS_PER_DAY_MAP = {5: 1, 10: 2, 15: 3, 30: 5}
 
 
 def load_reading_plans() -> list:
-    if READING_PLANS_FILE.exists():
-        return json.loads(READING_PLANS_FILE.read_text(encoding="utf-8")).get("plans", [])
-    return []
+    if not DATABASE_URL:
+        return []
+    with _db() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM reading_plans WHERE active=TRUE ORDER BY id")
+            return [dict(r) for r in cur.fetchall()]
 
 
 def save_reading_plans(plans: list):
-    READING_PLANS_FILE.write_text(json.dumps({"plans": plans}, indent=2), encoding="utf-8")
+    pass  # no-op — Neon is source of truth
 
 
 load_dotenv()
@@ -367,35 +382,29 @@ def create_reading_plan():
         return jsonify({"error": "Please enter a valid email address."}), 400
     if minutes not in CHAPTERS_PER_DAY_MAP:
         return jsonify({"error": "Invalid reading plan selected."}), 400
-    plans = load_reading_plans()
-    existing = next((p for p in plans if p["email"] == email), None)
-    plan_data = {
-        "email": email,
-        "minutes_per_day": minutes,
-        "chapters_per_day": CHAPTERS_PER_DAY_MAP[minutes],
-        "version": version,
-        "current_day": 1,
-        "start_date": dt.today().isoformat(),
-        "active": True,
-    }
-    if existing:
-        existing.update(plan_data)
-        save_reading_plans(plans)
-        return jsonify({"status": "updated"})
-    plans.append(plan_data)
-    save_reading_plans(plans)
+    cpd = CHAPTERS_PER_DAY_MAP[minutes]
+    if not DATABASE_URL:
+        return jsonify({"error": "Database not configured."}), 500
+    with _db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""INSERT INTO reading_plans (email, minutes_per_day, chapters_per_day, version, current_day, streak, active, updated_at)
+                VALUES (%s, %s, %s, %s, 1, 0, TRUE, NOW())
+                ON CONFLICT (email) DO UPDATE SET
+                    minutes_per_day=%s, chapters_per_day=%s, version=%s,
+                    current_day=1, streak=0, active=TRUE, updated_at=NOW()""",
+                (email, minutes, cpd, version, minutes, cpd, version))
+        conn.commit()
     return jsonify({"status": "created"})
 
 
 @app.route("/reading-plan/unsubscribe", methods=["GET"])
 def cancel_reading_plan():
     email = (request.args.get("email", "") or "").strip().lower()
-    if email:
-        plans = load_reading_plans()
-        for p in plans:
-            if p["email"] == email:
-                p["active"] = False
-        save_reading_plans(plans)
+    if email and DATABASE_URL:
+        with _db() as conn:
+            with conn.cursor() as cur:
+                cur.execute("UPDATE reading_plans SET active=FALSE WHERE email=%s", (email,))
+            conn.commit()
     return (
         "<html><body style='background:#ddeef8;font-family:Georgia,serif;"
         "color:#2a4a6a;text-align:center;padding:80px;'>"
