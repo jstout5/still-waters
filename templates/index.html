@@ -253,7 +253,7 @@
   .container {
     max-width: 780px;
     margin: 0 auto;
-    padding: 48px 24px 80px;
+    padding: 28px 24px 28px;
   }
 
   /* ── SEARCH CARD ── */
@@ -263,7 +263,7 @@
     border-top: 3px solid #7AABCC;
     border-radius: 16px;
     padding: 36px 40px;
-    margin-bottom: 48px;
+    margin-bottom: 24px;
     box-shadow: 0 8px 40px rgba(60,100,160,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
     backdrop-filter: blur(8px);
   }
@@ -583,7 +583,7 @@
   }
 
   /* ── FEATURES GRID ── */
-  .features-section { max-width: 780px; margin: 0 auto; padding: 0 24px 64px; }
+  .features-section { max-width: 780px; margin: 0 auto; padding: 0 24px 20px; }
 
   .feature-panel {
     background: rgba(255,255,255,0.82);
@@ -716,7 +716,7 @@
   .copy-btn.copied { color: #1a6b2e; border-color: rgba(26,107,46,0.4); }
 
   /* ── PRAYER WALL ── */
-  .prayer-wall { max-width: 780px; margin: 0 auto; padding: 0 24px 64px; }
+  .prayer-wall { max-width: 780px; margin: 0 auto; padding: 0 24px 20px; }
   .prayer-input-card {
     background: var(--panel);
     border: 1px solid var(--panel-border);
@@ -818,14 +818,6 @@
 
 <button class="dark-toggle" onclick="toggleDark()" id="dark-btn" title="Toggle dark mode">🌙</button>
 
-<!-- ── VERSE OF THE DAY ── -->
-<div class="votd-section" id="votd-section">
-  <div class="votd-eyebrow">Verse of the Day</div>
-  <div id="votd-theme" class="votd-theme">Loading…</div>
-  <div id="votd-verse" class="votd-verse" style="opacity:0;transition:opacity 0.8s;"></div>
-  <div id="votd-ref"   class="votd-ref"   style="opacity:0;transition:opacity 0.8s 0.2s;"></div>
-</div>
-
 <div class="header">
 
   <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:#7a9ab0;text-transform:uppercase;margin-bottom:6px;">Still Waters</div>
@@ -836,6 +828,14 @@
 <div class="container">
 
   <div class="search-card">
+    <!-- ── VERSE OF THE DAY (inline) ── -->
+    <div style="text-align:center;margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid rgba(100,160,220,0.18);">
+      <div class="votd-eyebrow" style="margin-bottom:10px;">Verse of the Day</div>
+      <div id="votd-theme" class="votd-theme" style="margin-bottom:12px;">Loading…</div>
+      <div id="votd-verse" class="votd-verse" style="opacity:0;transition:opacity 0.8s;font-size:clamp(16px,2.5vw,22px);margin-bottom:10px;"></div>
+      <div id="votd-ref"   class="votd-ref"   style="opacity:0;transition:opacity 0.8s 0.2s;font-size:12px;"></div>
+    </div>
+
     <label class="search-label" for="mood-input">What is on your heart?</label>
     <textarea
       id="mood-input"
@@ -997,7 +997,7 @@
 </div>
 
 <!-- ── DAILY VERSE BY EMAIL ── -->
-<div style="max-width:780px;margin:0 auto;padding:0 24px 64px;">
+<div style="max-width:780px;margin:0 auto;padding:0 24px 20px;">
   <div style="background:rgba(255,255,255,0.82);border:1px solid rgba(100,160,220,0.25);
     border-top:3px solid #7AABCC;border-radius:16px;padding:36px 40px;text-align:center;
     box-shadow:0 8px 32px rgba(60,100,160,0.1);backdrop-filter:blur(8px);">
@@ -1063,7 +1063,7 @@
 </div>
 
 <!-- ── FIND A CHURCH NEAR YOU ── -->
-<div style="max-width:780px;margin:0 auto;padding:0 24px 64px;">
+<div style="max-width:780px;margin:0 auto;padding:0 24px 20px;">
   <div class="feature-panel">
     <div class="sec-head">
       <span class="sec-eyebrow">⛪ Lexington · Richmond · Versailles · KY</span>
