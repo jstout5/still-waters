@@ -161,6 +161,39 @@
     padding:32px 0; text-align:center;
   }
 
+  /* Plan selector strip */
+  .plan-strip {
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+    margin-bottom:18px; padding:10px 14px;
+    background:rgba(90,156,187,0.06);
+    border:1px solid rgba(90,156,187,0.15); border-radius:10px;
+  }
+  .plan-strip-label {
+    font-family:'Cinzel',serif; font-size:9px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase; color:var(--muted);
+    margin-right:2px;
+  }
+  .p-btn {
+    font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px;
+    padding:4px 12px; border-radius:20px;
+    border:1px solid rgba(90,156,187,0.3);
+    background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s;
+  }
+  .p-btn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .plan-info {
+    font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px;
+    color:var(--blue); margin-left:auto; white-space:nowrap;
+  }
+
+  /* Chapter section divider inside reading pane */
+  .ch-divider {
+    font-family:'Cinzel',serif; font-size:13px; font-weight:700;
+    color:var(--blue); letter-spacing:2px; text-transform:uppercase;
+    margin:28px 0 14px; padding-top:24px;
+    border-top:1px solid var(--border);
+  }
+  .ch-divider:first-child { margin-top:0; padding-top:0; border-top:none; }
+
   /* Prev/Next nav */
   .ch-nav {
     display:flex; justify-content:space-between; align-items:center;
@@ -214,8 +247,17 @@
   <div class="reading-pane">
     <div class="version-strip">
       <span>Version</span>
-      <button class="v-btn active" data-v="kjv" onclick="setV('kjv',this)" title="King James Version — The classic 1611 English translation, known for its poetic, majestic language.">KJV</button>
-      <button class="v-btn" data-v="web" onclick="setV('web',this)" title="World English Bible — A modern public domain translation in clear, contemporary English.">WEB</button>
+      <button class="v-btn active" data-v="kjv" onclick="setV('kjv',this)">KJV</button>
+      <button class="v-btn" data-v="web" onclick="setV('web',this)">WEB</button>
+    </div>
+
+    <div class="plan-strip">
+      <span class="plan-strip-label">Daily Plan</span>
+      <button class="p-btn" data-m="5"  onclick="setPlan(5)"  title="1 chapter · ~5 min">5 min</button>
+      <button class="p-btn" data-m="10" onclick="setPlan(10)" title="2 chapters · ~10 min">10 min</button>
+      <button class="p-btn" data-m="15" onclick="setPlan(15)" title="3 chapters · ~15 min">15 min</button>
+      <button class="p-btn" data-m="30" onclick="setPlan(30)" title="5 chapters · ~30 min">30 min</button>
+      <span class="plan-info" id="plan-info"></span>
     </div>
 
     <div id="reading-heading" class="reading-heading">Genesis 1</div>
@@ -260,141 +302,201 @@ const CHAPTERS = {
   "1 John":5,"2 John":1,"3 John":1,Jude:1,Revelation:22
 };
 
-let currentBook = null, currentChapter = 1, currentVersion = 'kjv';
+// Flat list of every chapter in canonical order
+const ALL_BOOKS = [...OT, ...NT];
+const ALL_CH = [];
+for (const book of ALL_BOOKS) {
+  for (let ch = 1; ch <= (CHAPTERS[book] || 1); ch++) ALL_CH.push({book, ch});
+}
+const TOTAL = ALL_CH.length; // 1189
+
+const CPD = {5:1, 10:2, 15:3, 30:5};
+
+let currentIdx  = 0;          // index into ALL_CH of first chapter in current view
+let planMinutes = 5;
+let currentVersion = 'kjv';
+
+function cpd() { return CPD[planMinutes] || 1; }
+
+// ── PERSISTENCE ─────────────────────────────────────────────────────────────
 
 function saveProgress() {
-  localStorage.setItem('sw-book', currentBook);
-  localStorage.setItem('sw-ch',   currentChapter);
-  localStorage.setItem('sw-ver',  currentVersion);
+  localStorage.setItem('sw-idx', currentIdx);
+  localStorage.setItem('sw-ver', currentVersion);
+  localStorage.setItem('sw-plan-minutes', planMinutes);
 }
 
-function loadProgress() {
+function loadSaved() {
   return {
-    book:    localStorage.getItem('sw-book') || 'Genesis',
-    chapter: parseInt(localStorage.getItem('sw-ch') || '1'),
+    idx:     parseInt(localStorage.getItem('sw-idx') || '0'),
     version: localStorage.getItem('sw-ver') || 'kjv',
+    minutes: parseInt(localStorage.getItem('sw-plan-minutes') || '5'),
   };
 }
 
-function updateContinueBtn(book, chapter) {
-  const sec = document.getElementById('continue-section');
-  const btn = document.getElementById('continue-btn');
-  if (book && book !== 'Genesis' || chapter > 1) {
-    sec.style.display = 'block';
-    btn.textContent   = `${book} ${chapter} →`;
-  }
-}
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
 
-function resumeReading() {
-  const p = loadProgress();
-  jumpTo(p.book, p.chapter, p.version);
-}
-
-// Build sidebar
 function buildSidebar() {
   ['ot','nt'].forEach(which => {
     const books = which === 'ot' ? OT : NT;
     const el = document.getElementById(`${which}-list`);
     el.innerHTML = books.map(b =>
-      `<button class="book-btn" onclick="selectBook('${b.replace(/'/g,"\\'")}',this)">${b}</button>`
+      `<button class="book-btn" onclick="pickBook('${b.replace(/'/g,"\\'")}',this)">${b}</button>`
     ).join('');
   });
 }
 
 function highlightSidebarBook(book) {
-  document.querySelectorAll('.book-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent === book);
-  });
+  document.querySelectorAll('.book-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent === book)
+  );
 }
 
-function jumpTo(book, chapter, version) {
-  version = version || currentVersion;
-  currentBook    = book;
-  currentChapter = chapter;
-  currentVersion = version;
-  document.querySelectorAll('.v-btn').forEach(b => b.classList.toggle('active', b.dataset.v === version));
-  highlightSidebarBook(book);
-  buildChapterBar(book);
-  document.querySelectorAll('.ch-btn').forEach((b,i) => b.classList.toggle('active', i+1===chapter));
-  loadChapter(book, chapter);
+function updateContinueBtn(idx) {
+  const sec = document.getElementById('continue-section');
+  const btn = document.getElementById('continue-btn');
+  if (idx > 0) {
+    const {book, ch} = ALL_CH[idx];
+    sec.style.display = 'block';
+    btn.textContent = `Continue: ${book} ${ch} →`;
+  }
 }
 
-function selectBook(book, btn) {
+function resumeReading() {
+  loadDay(currentIdx);
+}
+
+// ── PLAN SELECTOR ────────────────────────────────────────────────────────────
+
+function setPlan(minutes) {
+  planMinutes = minutes;
+  localStorage.setItem('sw-plan-minutes', minutes);
+  document.querySelectorAll('.p-btn').forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.m) === minutes)
+  );
+  // realign current position to new plan boundary and reload
+  const aligned = Math.floor(currentIdx / cpd()) * cpd();
+  loadDay(aligned);
+}
+
+function updatePlanInfo() {
+  const n = cpd();
+  const day = Math.floor(currentIdx / cpd()) + 1;
+  const totalDays = Math.ceil(TOTAL / cpd());
+  document.getElementById('plan-info').textContent =
+    `${n} chapter${n>1?'s':''}/day · Day ${day} of ${totalDays}`;
+}
+
+// ── CHAPTER BAR ──────────────────────────────────────────────────────────────
+
+function buildChapterBar(book, activeChapters) {
+  const total = CHAPTERS[book] || 1;
+  document.getElementById('chapter-bar').innerHTML =
+    Array.from({length:total},(_,i) => i+1).map(n =>
+      `<button class="ch-btn${activeChapters.includes(n)?' active':''}"
+        onclick="pickChapter('${book.replace(/'/g,"\\'")}',${n})">${n}</button>`
+    ).join('');
+}
+
+// Jump to the plan-aligned day that contains this book+chapter
+function pickBook(book, btn) {
   document.querySelectorAll('.book-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  currentBook = book;
-  currentChapter = 1;
-  buildChapterBar(book);
-  loadChapter(book, 1);
+  const globalIdx = ALL_CH.findIndex(e => e.book === book);
+  const aligned = Math.floor(globalIdx / cpd()) * cpd();
+  loadDay(aligned);
 }
 
-function buildChapterBar(book) {
-  const total = CHAPTERS[book] || 1;
-  const bar = document.getElementById('chapter-bar');
-  bar.innerHTML = Array.from({length:total},(_,i)=>i+1).map(n =>
-    `<button class="ch-btn${n===1?' active':''}" onclick="selectChapter(${n},this)">${n}</button>`
-  ).join('');
+function pickChapter(book, chapter) {
+  const globalIdx = ALL_CH.findIndex(e => e.book === book && e.ch === chapter);
+  if (globalIdx < 0) return;
+  const aligned = Math.floor(globalIdx / cpd()) * cpd();
+  loadDay(aligned);
 }
 
-function selectChapter(n, btn) {
-  document.querySelectorAll('.ch-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentChapter = n;
-  loadChapter(currentBook, n);
-}
+// ── VERSION ──────────────────────────────────────────────────────────────────
 
 function setV(v, btn) {
   currentVersion = v;
   document.querySelectorAll('.v-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (currentBook) loadChapter(currentBook, currentChapter);
+  loadDay(currentIdx);
 }
 
-async function loadChapter(book, chapter) {
-  const el   = document.getElementById('verse-text');
-  const head = document.getElementById('reading-heading');
-  const nav  = document.getElementById('ch-nav');
-  const pos  = document.getElementById('ch-pos');
+// ── CORE LOADER ──────────────────────────────────────────────────────────────
 
-  el.innerHTML = '<div class="loading-txt">Loading…</div>';
-  head.textContent = `${book} ${chapter}`;
-  nav.style.display = 'flex';
-  pos.textContent = `Chapter ${chapter} of ${CHAPTERS[book]}`;
+async function fetchVerses(book, ch) {
+  const enc = encodeURIComponent(book.replace(/ /g,'+'));
+  const url = `https://bible-api.com/${enc}+${ch}?translation=${currentVersion}`;
+  const data = await fetch(url).then(r => r.json());
+  return data.verses || [];
+}
 
-  document.getElementById('prev-btn').disabled = chapter <= 1;
-  document.getElementById('next-btn').disabled = chapter >= CHAPTERS[book];
+async function loadDay(startIdx) {
+  if (startIdx < 0) startIdx = 0;
+  if (startIdx >= TOTAL) return;
 
-  try {
-    const enc = encodeURIComponent(book.replace(/ /g,'+'));
-    const url = `https://bible-api.com/${enc}+${chapter}?translation=${currentVersion}`;
-    const data = await fetch(url).then(r => r.json());
-    const verses = data.verses || [];
-    if (!verses.length) throw new Error('no verses');
-    el.innerHTML = verses.map(v =>
-      `<span class="verse-line"><sup class="verse-num">${v.verse}</sup>${v.text.trim()} </span>`
-    ).join('');
-    saveProgress();
-    updateContinueBtn(currentBook, currentChapter);
-  } catch(e) {
-    el.innerHTML = `<div class="loading-txt">Could not load ${book} ${chapter}. Check your connection and try again.</div>`;
+  currentIdx = startIdx;
+  const n       = cpd();
+  const entries = ALL_CH.slice(startIdx, Math.min(startIdx + n, TOTAL));
+  const el      = document.getElementById('verse-text');
+  const head    = document.getElementById('reading-heading');
+  const nav     = document.getElementById('ch-nav');
+
+  // Heading: "Genesis 1" or "Genesis 1–3" or "Ruth 4 · 1 Samuel 1"
+  if (entries.length === 1) {
+    head.textContent = `${entries[0].book} ${entries[0].ch}`;
+  } else {
+    const first = entries[0], last = entries[entries.length - 1];
+    head.textContent = first.book === last.book
+      ? `${first.book} ${first.ch}–${last.ch}`
+      : `${first.book} ${first.ch} · ${last.book} ${last.ch}`;
   }
 
-  // Scroll to top of reading pane
+  nav.style.display = 'flex';
+  document.getElementById('prev-btn').disabled = startIdx === 0;
+  document.getElementById('next-btn').disabled = startIdx + n >= TOTAL;
+
+  const day      = Math.floor(startIdx / n) + 1;
+  const totalDays = Math.ceil(TOTAL / n);
+  document.getElementById('ch-pos').textContent = `Day ${day} of ${totalDays}`;
+
+  // Sidebar + chapter bar
+  highlightSidebarBook(entries[0].book);
+  buildChapterBar(entries[0].book, entries.filter(e => e.book === entries[0].book).map(e => e.ch));
+  updatePlanInfo();
+
+  // Load verses
+  el.innerHTML = '<div class="loading-txt">Loading…</div>';
+  try {
+    let html = '';
+    for (let i = 0; i < entries.length; i++) {
+      const {book, ch} = entries[i];
+      const verses = await fetchVerses(book, ch);
+      const divider = entries.length > 1
+        ? `<div class="ch-divider">${book} ${ch}</div>`
+        : '';
+      const body = verses.length
+        ? verses.map(v =>
+            `<span class="verse-line"><sup class="verse-num">${v.verse}</sup>${v.text.trim()} </span>`
+          ).join('')
+        : `<em style="color:var(--muted)">Could not load ${book} ${ch}. Check your connection.</em>`;
+      html += divider + body;
+    }
+    el.innerHTML = html;
+    saveProgress();
+    updateContinueBtn(startIdx);
+  } catch(e) {
+    el.innerHTML = `<div class="loading-txt">Could not load chapters. Check your connection and try again.</div>`;
+  }
+
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function prevChapter() {
-  if (currentChapter <= 1) return;
-  currentChapter--;
-  document.querySelectorAll('.ch-btn').forEach((b,i) => b.classList.toggle('active', i+1===currentChapter));
-  loadChapter(currentBook, currentChapter);
-}
-function nextChapter() {
-  if (currentChapter >= CHAPTERS[currentBook]) return;
-  currentChapter++;
-  document.querySelectorAll('.ch-btn').forEach((b,i) => b.classList.toggle('active', i+1===currentChapter));
-  loadChapter(currentBook, currentChapter);
-}
+function prevChapter() { loadDay(Math.max(0, currentIdx - cpd())); }
+function nextChapter() { loadDay(currentIdx + cpd()); }
+
+// ── DARK MODE ────────────────────────────────────────────────────────────────
 
 function toggleDark() {
   const dark = document.body.classList.toggle('dark');
@@ -406,16 +508,28 @@ if (localStorage.getItem('sw-dark')) {
   document.getElementById('dark-btn').textContent = '☀️';
 }
 
+// ── INIT ─────────────────────────────────────────────────────────────────────
+
 buildSidebar();
 
-// Auto-start from saved progress or Genesis 1
-(function() {
-  const p = loadProgress();
-  jumpTo(p.book, p.chapter, p.version);
-  // show continue button only if not at the very start
-  if (p.book !== 'Genesis' || p.chapter > 1) {
-    updateContinueBtn(p.book, p.chapter);
-  }
+(function init() {
+  const saved = loadSaved();
+  planMinutes    = saved.minutes;
+  currentVersion = saved.version;
+
+  // Highlight plan button
+  document.querySelectorAll('.p-btn').forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.m) === planMinutes)
+  );
+  // Highlight version button
+  document.querySelectorAll('.v-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.v === currentVersion)
+  );
+
+  // Show continue button if not at start
+  if (saved.idx > 0) updateContinueBtn(saved.idx);
+
+  loadDay(saved.idx);
 })();
 </script>
 </body>

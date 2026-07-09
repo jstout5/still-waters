@@ -1426,6 +1426,7 @@
 
   function selectScrollPlan(minutes) {
     scrollPlan = minutes;
+    localStorage.setItem('sw-plan-minutes', minutes);
     document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
     document.querySelector(`.plan-card[data-minutes="${minutes}"]`)?.classList.add('selected');
     // Sync the featured "Bible in a Year" card (maps to 15 min)
