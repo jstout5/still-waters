@@ -133,7 +133,13 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1 year cache for static files
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+_anthropic_client = None
+def get_client():
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    return _anthropic_client
 
 # Gzip all responses >= 1KB
 try:
@@ -189,7 +195,7 @@ def stream_verses(mood: str, version: str):
     """Generator that yields SSE events, one per verse/reflection/books."""
     prompt = STREAM_PROMPT.format(mood=mood, version=version)
     buffer = ""
-    with client.messages.stream(
+    with get_client().messages.stream(
         model="claude-haiku-4-5-20251001",
         max_tokens=1400,
         system=SYSTEM_PROMPT,
@@ -485,7 +491,7 @@ def verse_of_day():
 
     # Generate fresh verse of the day
     try:
-        resp = client.messages.create(
+        resp = get_client().messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=300,
             messages=[{"role": "user", "content":
