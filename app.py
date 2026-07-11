@@ -52,7 +52,10 @@ def _init_subscribers():
             )""")
         conn.commit()
 
-_init_subscribers()
+try:
+    _init_subscribers()
+except Exception as _db_init_err:
+    print(f"DB init skipped (will retry on first request): {_db_init_err}")
 
 def load_subscribers() -> list:
     if not DATABASE_URL:
