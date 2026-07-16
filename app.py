@@ -372,6 +372,18 @@ def subscribe():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/subs")
+def api_subs():
+    """Return full subscriber+reading-plan data for send_devotional.py.
+    Protected by ADMIN_PASSWORD so only the local script can call it."""
+    key = request.args.get("key", "")
+    admin_pw = os.getenv("ADMIN_PASSWORD", "BIGDICK")
+    if key != admin_pw:
+        return jsonify({"error": "unauthorized"}), 401
+    rows = load_subscribers()
+    return jsonify(rows)
+
+
 @app.route("/unsubscribe", methods=["GET"])
 def unsubscribe():
     email = (request.args.get("email", "") or "").strip().lower()

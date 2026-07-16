@@ -15,6 +15,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from urllib.parse import quote_plus
 
+from pathlib import Path
 import psycopg2
 import psycopg2.extras
 import requests
@@ -55,22 +56,57 @@ def _db():
     return psycopg2.connect(DATABASE_URL, sslmode="require")
 
 
+LIVE_APP_URL = os.getenv("APP_URL", "https://still-waters-1.onrender.com")
+ADMIN_PW     = os.getenv("ADMIN_PASSWORD", "BIGDICK")
+SUBS_JSON    = Path(__file__).parent.parent / "subscribers.json"
+
 def get_subscribers() -> list[dict]:
-    with _db() as conn:
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute("""
-                SELECT s.email,
-                       rp.current_day,
-                       rp.chapters_per_day,
-                       rp.minutes_per_day,
-                       rp.version,
-                       rp.streak,
-                       rp.active AS has_plan
-                FROM subscribers s
-                LEFT JOIN reading_plans rp ON rp.email=s.email AND rp.active=TRUE
-                ORDER BY s.created_at
-            """)
-            return [dict(r) for r in cur.fetchall()]
+    # 1. Direct DB (works on Render where DATABASE_URL is set)
+    if DATABASE_URL:
+        try:
+            with _db() as conn:
+                with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                    cur.execute("""
+                        SELECT s.email,
+                               rp.current_day,
+                               rp.chapters_per_day,
+                               rp.minutes_per_day,
+                               rp.version,
+                               rp.streak,
+                               rp.active AS has_plan
+                        FROM subscribers s
+                        LEFT JOIN reading_plans rp ON rp.email=s.email AND rp.active=TRUE
+                        ORDER BY s.created_at
+                    """)
+                    rows = [dict(r) for r in cur.fetchall()]
+                    if rows:
+                        return rows
+        except Exception as e:
+            print(f"DB unavailable: {e}")
+
+    # 2. Live API — works locally without DATABASE_URL
+    try:
+        r = requests.get(f"{LIVE_APP_URL}/api/subs?key={ADMIN_PW}", timeout=30)
+        if r.status_code == 200:
+            rows = r.json()
+            if rows:
+                print(f"  Fetched {len(rows)} subscribers from live API")
+                return rows
+    except Exception as e:
+        print(f"Live API unavailable: {e}")
+
+    # 3. Local JSON last resort
+    if SUBS_JSON.exists():
+        data = json.loads(SUBS_JSON.read_text(encoding="utf-8"))
+        subs = data.get("subscribers", [])
+        result = []
+        for s in subs:
+            if isinstance(s, str):
+                result.append({"email": s, "has_plan": False})
+            elif isinstance(s, dict):
+                result.append(s)
+        return result
+    return []
 
 
 def advance_plan(email: str, new_day: int, new_streak: int):
@@ -340,7 +376,7 @@ def main():
                 advance_plan(email, day + 1, (sub.get("streak") or 0) + 1)
 
             label = reading_label(chapters)
-            print(f"  ✓ {email}" + (f" — {label}" if label else ""))
+            print(f"  SENT: {email}" + (f" - {label}" if label else ""))
 
     print("Done.")
 
